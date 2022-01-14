@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome To Hardlee Automation</title>
+</head>
+<body>
+<h1>Hardlee Automation</h1>
+<p>Thank you for visiting</p>
+{% if welcome_message_list %}
+    <ul>
+    {% for msg in welcome_message_list %}
+        <li>{{ msg.text }}</li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No welcome message.</p>
+{% endif %}
+</body>
+</html>
