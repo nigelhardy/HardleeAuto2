@@ -4,17 +4,47 @@
     <meta charset="UTF-8">
     <title>Welcome To Hardlee Automation</title>
 </head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+        const devicesSocket = new WebSocket(
+            'ws://'
+            + window.location.host
+            + '/ws/devices/'
+        );
+
+        devicesSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            console.log("Recv'd " + data.rf_outlet_status);
+            for (const [key, value] of Object.entries(data.rf_outlet_status)) {
+                console.log(key, value);
+                document.getElementById("rf_outlet_state_" + key).innerHTML=(value ? 'On' : 'Off');
+            }
+        };
+
+        devicesSocket.onclose = function(e) {
+            console.error('Devices socket closed unexpectedly');
+        };
+
+        function toggleRfOutlet(rf_outlet_id) {
+            console.log("Sending: " + rf_outlet_id);
+            devicesSocket.send(JSON.stringify({'rf_outlet_toggle': rf_outlet_id}));
+        }
+    </script>
 <body>
 <h1>Hardlee Automation</h1>
-<p>Thank you for visiting</p>
-{% if welcome_message_list %}
+<p>RF Outlets Status</p>
+{% if rf_outlets %}
     <ul>
-    {% for msg in welcome_message_list %}
-        <li>{{ msg.text }}</li>
+    {% for outlet in rf_outlets %}
+        <li>
+            <button onclick="toggleRfOutlet({{outlet.id}})">Toggle</button>
+            {{ outlet.name }}:
+            <span id="rf_outlet_state_{{outlet.id}}"> {% if outlet.status %} On {% else %} Off {% endif %}</span>
+        </li>
     {% endfor %}
     </ul>
 {% else %}
-    <p>No welcome message.</p>
+    <p>No RF Outlets configured.</p>
 {% endif %}
 </body>
 </html>
