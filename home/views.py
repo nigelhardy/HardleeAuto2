@@ -1,12 +1,12 @@
 from django.http import HttpResponse
-from .models import WelcomeMessage
+from devices.models import RFOutlet
 from django.template import loader
 
 
 def index(request):
-    welcome_message_list = WelcomeMessage.objects.order_by('-pub_date')
+    rf_outlets = RFOutlet.objects.all()
     template = loader.get_template('home/index.html')
     context = {
-        'welcome_message_list': welcome_message_list
+        'rf_outlets': rf_outlets
     }
     return HttpResponse(template.render(context, request))
