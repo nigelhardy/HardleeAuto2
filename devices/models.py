@@ -1,4 +1,14 @@
 from django.db import models
+import socket
+import json
+
+
+class RF433Module(models.Model):
+    name = models.CharField(max_length=200)
+    ip_address = models.CharField(max_length=15, default="127.0.0.1")
+
+    def __str__(self):
+        return self.name
 
 
 class RFOutlet(models.Model):
@@ -7,32 +17,50 @@ class RFOutlet(models.Model):
     # add 9 to this value for the 'off' command
     wireless_address = models.IntegerField(default="0")
     status = models.BooleanField(default=False)
+    rf_433_module = models.ForeignKey(RF433Module, on_delete=models.CASCADE, blank=True, null=True)
 
     def toggle(self):
         self.status = not self.status
-        self.save()
-        self.update()
+        if self.send_command():
+            self.save()
+
+    def send_command(self):
+        return True
+        try:
+            # Temporary send to python server instead of real devices
+            s = socket.socket()
+            port = 12345
+            ip_address = "127.0.0.1"
+            if self.rf_433_module is not None:
+                ip_address = self.rf_433_module.ip_address
+            s.connect((ip_address, port))
+            s.sendall(bytes(self.get_json_state(), encoding="utf-8"))
+            recv_data = s.recv(1024).decode()
+            s.close()
+            if recv_data != "success":
+                return False
+            return True
+        except Exception as e:
+            print(e.what())
+            return False
+
+    def get_json_state(self):
+        return json.dumps({
+            'rf_outlet_status': {self.id: self.status}
+        })
 
     def set(self, status):
         self.status = status
-        self.save()
-        self.update()
+        if self.send_command():
+            self.save()
+        else:
+            print('Unable to change rf outlet state!')
 
-    def update(self):
-        # outlets = RFOutlet.objects.all()
-        # outlet_status = {}
-        # for outlet in outlets:
-        #     outlet_status[outlet.id] = outlet.status
+    def __str__(self):
+        return self.name
 
-        # chans = ConnectedClients.objects.all()
-        # channel_names = []
-        # for chan in chans:
-        #     channel_names.append(chan.channel_name)
-        send_code = int(self.wireless_address)
-
-        if not self.status:
-            send_code += 9
-        # send_serial_command.apply_async(('http://localhost:3000/send_433', .2,
-        #                                  {'address':send_code},
-        #                                  {'w_outlets': outlet_status}, channel_names))
-        return True
+    # def update(self):
+    #     send_code = int(self.wireless_address)
+    #     if not self.status:
+    #         send_code += 9
+    #     return True
