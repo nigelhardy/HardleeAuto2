@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'channels',
     'devices.apps.DevicesConfig',
     'home.apps.HomeConfig',
+    'mqttapp.apps.MqttappConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -71,7 +72,15 @@ TEMPLATES = [
 ]
 
 # WSGI_APPLICATION = 'hardleeauto.wsgi.application'
-
+ASGI_APPLICATION = 'hardleeauto.asgi.application'
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
@@ -123,5 +132,3 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-ASGI_APPLICATION = 'hardleeauto.asgi.application'
