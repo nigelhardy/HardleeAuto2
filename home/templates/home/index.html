@@ -14,10 +14,15 @@
 
         devicesSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            console.log("Recv'd " + data.rf_outlet_status);
-            for (const [key, value] of Object.entries(data.rf_outlet_status)) {
-                console.log(key, value);
-                document.getElementById("rf_outlet_state_" + key).innerHTML=(value ? 'On' : 'Off');
+            if("rf_outlet_status" in data)
+            {
+            }
+            else if("rgb_light_status" in data)
+            {
+                var light = data.rgb_light_status;
+                var light_str = (light.is_on ? 'On, ' : 'Off, ') + "red=" + light.red + ", green=" + light.green
+                    + ", blue=" + light.blue;
+                document.getElementById("rgb_light_state_" + light.id).innerHTML = light_str;
             }
         };
 
@@ -25,9 +30,13 @@
             console.error('Devices socket closed unexpectedly');
         };
 
-        function toggleRfOutlet(rf_outlet_id) {
+        function toggle_rf_outlet(rf_outlet_id) {
             console.log("Sending: " + rf_outlet_id);
             devicesSocket.send(JSON.stringify({'rf_outlet_toggle': rf_outlet_id}));
+        }
+        function toggle_rgb_light(rgb_light_id) {
+            console.log("Sending: RGB Light ID = " + rgb_light_id);
+            devicesSocket.send(JSON.stringify({'rgb_light_toggle': rgb_light_id}));
         }
     </script>
 <body>
@@ -37,7 +46,7 @@
     <ul>
     {% for outlet in rf_outlets %}
         <li>
-            <button onclick="toggleRfOutlet({{outlet.id}})">Toggle</button>
+            <button onclick="toggle_rf_outlet({{outlet.id}})">Toggle</button>
             {{ outlet.name }}:
             <span id="rf_outlet_state_{{outlet.id}}"> {% if outlet.status %} On {% else %} Off {% endif %}</span>
         </li>
@@ -45,6 +54,20 @@
     </ul>
 {% else %}
     <p>No RF Outlets configured.</p>
+{% endif %}
+{% if rgb_lights %}
+    <ul>
+    {% for light in rgb_lights %}
+        <li>
+            <button onclick="toggle_rgb_light({{light.id}})">Toggle</button>
+            {{ light.name }}:
+            <span id="rgb_light_state_{{light.id}}"> {% if light.is_on %} On, {% else %} Off, {% endif %} red={{ light.red }},
+            green={{ light.green }},  blue={{ light.blue }}</span>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>No RGB Lights configured.</p>
 {% endif %}
 </body>
 </html>
