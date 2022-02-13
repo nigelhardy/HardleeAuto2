@@ -6,6 +6,62 @@ import json
 from channels.layers import get_channel_layer
 
 
+class RF433Module(models.Model):
+    name = models.CharField(max_length=300)
+    unique_id = models.IntegerField(unique=True)
+    is_active = models.BooleanField(default=True)
+    rf433_topic = "rf-433"
+
+    def send_rf_outlet_command(self, rf_outlet):
+        topic = self.rf433_topic + "/" + str(self.unique_id) + "/send-command"
+        channel_layer = get_channel_layer()
+        print("topic sending " + topic)
+        status = {"id": rf_outlet.id, "is_on": rf_outlet.is_on,
+                  "rf_payload": rf_outlet.get_payload()}
+        print(status)
+        async_to_sync(channel_layer.send)('mqtt.pub', {  # also needs to be mqtt.pub
+            'type': 'mqtt.pub',  # necessary to be mqtt.pub
+            'text': {
+                'topic': topic,
+                'payload': json.dumps(status)
+            }
+        })
+        pass
+
+    def __str__(self):
+        return self.name
+
+
+class RF433Outlet(models.Model):
+    name = models.CharField(max_length=300)
+    on_payload = models.IntegerField(default=-1)
+    is_on = models.BooleanField(default=False)
+    rf_433_mqtt = models.ForeignKey(RF433Module, on_delete=models.CASCADE)
+
+    def get_payload(self):
+        if self.is_on:
+            return self.on_payload
+        else:
+            return self.on_payload + 9
+
+    def toggle(self):
+        print(self.is_on)
+        self.is_on = not self.is_on
+        self.rf_433_mqtt.send_rf_outlet_command(self)
+        self.save()
+
+    def get_state_dict(self):
+        return {"id": self.id, "is_on": self.is_on}
+
+    def get_json_state(self):
+        return json.dumps({
+            'rf_outlet_status': self.get_state_dict()
+        })
+
+    def __str__(self):
+        return self.name
+
+
 class RGBLight(models.Model):
     name = models.CharField(max_length=300)
     unique_id = models.IntegerField(unique=True)
@@ -49,66 +105,3 @@ class RGBLight(models.Model):
             }
         })
         pass
-
-
-class RF433Module(models.Model):
-    name = models.CharField(max_length=200)
-    ip_address = models.CharField(max_length=15, default="127.0.0.1")
-
-    def __str__(self):
-        return self.name
-
-
-class RFOutlet(models.Model):
-    name = models.CharField(max_length=200)
-    # This value is the 'on' command via 433Mhz
-    # add 9 to this value for the 'off' command
-    wireless_address = models.IntegerField(default="0")
-    status = models.BooleanField(default=False)
-    rf_433_module = models.ForeignKey(RF433Module, on_delete=models.CASCADE, blank=True, null=True)
-
-    def toggle(self):
-        self.status = not self.status
-        if self.send_command():
-            self.save()
-
-    def send_command(self):
-        return True
-        try:
-            # Temporary send to python server instead of real devices
-            s = socket.socket()
-            port = 12345
-            ip_address = "127.0.0.1"
-            if self.rf_433_module is not None:
-                ip_address = self.rf_433_module.ip_address
-            s.connect((ip_address, port))
-            s.sendall(bytes(self.get_json_state(), encoding="utf-8"))
-            recv_data = s.recv(1024).decode()
-            s.close()
-            if recv_data != "success":
-                return False
-            return True
-        except Exception as e:
-            print(e.what())
-            return False
-
-    def get_json_state(self):
-        return json.dumps({
-            'rf_outlet_status': {self.id: self.status}
-        })
-
-    def set(self, status):
-        self.status = status
-        if self.send_command():
-            self.save()
-        else:
-            print('Unable to change rf outlet state!')
-
-    def __str__(self):
-        return self.name
-
-    # def update(self):
-    #     send_code = int(self.wireless_address)
-    #     if not self.status:
-    #         send_code += 9
-    #     return True

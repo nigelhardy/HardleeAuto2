@@ -1,10 +1,10 @@
 from django.http import HttpResponse
-from devices.models import RFOutlet, RGBLight
+from devices.models import RF433Outlet, RGBLight
 from django.template import loader
 
 
 def index(request):
-    rf_outlets = RFOutlet.objects.all()
+    rf_outlets = RF433Outlet.objects.all()
     rgb_lights = RGBLight.objects.all()
     template = loader.get_template('home/index.html')
     context = {

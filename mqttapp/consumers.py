@@ -8,7 +8,7 @@ import paho.mqtt.client as paho
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hardleeauto.settings')
 
 django.setup()
-from devices.models import RFOutlet, RGBLight
+from devices.models import RF433Outlet, RGBLight
 
 
 class MqttConsumer(SyncConsumer):

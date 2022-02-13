@@ -1,7 +1,7 @@
 from django.contrib import admin
-from .models import RFOutlet, RF433Module, RGBLight
+from .models import RF433Outlet, RF433Module, RGBLight
 
-admin.site.register(RFOutlet)
+admin.site.register(RF433Outlet)
 admin.site.register(RF433Module)
 admin.site.register(RGBLight)
 

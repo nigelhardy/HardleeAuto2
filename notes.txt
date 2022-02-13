@@ -1,0 +1,8 @@
+
+python manage.py runserver 0.0.0.0
+python manage.py runworker mqtt
+django_mqtt_bridge -H localhost -p 1883 --topic rgb-light/#:2 hardleeauto.asgi:channel_layer --v
+
+listen to all
+mosquitto_sub -v -h localhost -p 1883 -t '#'
+
