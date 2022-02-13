@@ -5,7 +5,7 @@ from asgiref.sync import async_to_sync
 from channels.consumer import SyncConsumer
 from channels.generic.websocket import WebsocketConsumer
 from django.core.exceptions import ObjectDoesNotExist
-from devices.models import RFOutlet, RGBLight
+from devices.models import RF433Outlet, RGBLight
 
 
 class DevicesConsumer(WebsocketConsumer):
@@ -29,7 +29,7 @@ class DevicesConsumer(WebsocketConsumer):
             text_data_json = json.loads(text_data)
             if 'rf_outlet_toggle' in text_data_json:
                 message = text_data_json['rf_outlet_toggle']
-                outlet = RFOutlet.objects.get(id=int(message))
+                outlet = RF433Outlet.objects.get(id=int(message))
                 outlet.toggle()
                 self.send(text_data=outlet.get_json_state())
             elif 'rgb_light_toggle' in text_data_json:
