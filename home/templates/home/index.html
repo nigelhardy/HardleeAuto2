@@ -43,6 +43,10 @@
         console.log("Sending: RGB Light ID = " + rgb_light_id);
         devicesSocket.send(JSON.stringify({'rgb_light_toggle': rgb_light_id}));
     }
+    function activate_garage_door() {
+        console.log("Sending: Garage Door");
+        devicesSocket.send(JSON.stringify({'activate_garage_door': {} }));
+    }
     </script>
 <body onload="setup_ws()">
 <h1>Hardlee Automation</h1>
@@ -76,6 +80,6 @@
 {% else %}
     <p>No RGB Lights configured.</p>
 {% endif %}
-
+<button onclick="activate_garage_door()">Garage Door</button>
 </body>
 </html>
