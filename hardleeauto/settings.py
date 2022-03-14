@@ -25,7 +25,7 @@ SECRET_KEY = 'REPLACE_WITH_REAL_KEY'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["192.168.0.200", "hardlee.auto"]
+ALLOWED_HOSTS = ["192.168.0.200", "hardlee.auto", "192.168.0.104"]
 
 
 # Application definition
