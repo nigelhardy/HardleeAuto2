@@ -6,6 +6,7 @@ from channels.consumer import SyncConsumer
 from channels.generic.websocket import WebsocketConsumer
 from django.core.exceptions import ObjectDoesNotExist
 from devices.models import RF433Outlet, RGBLight
+from channels.layers import get_channel_layer
 
 
 class DevicesConsumer(WebsocketConsumer):
@@ -36,6 +37,16 @@ class DevicesConsumer(WebsocketConsumer):
                 message = text_data_json['rgb_light_toggle']
                 light = RGBLight.objects.get(id=int(message))
                 light.toggle()
+            elif 'activate_garage_door':
+                topic = "relay/101/garage-door"
+                channel_layer = get_channel_layer()
+                async_to_sync(channel_layer.send)('mqtt.pub', {  # also needs to be mqtt.pub
+                    'type': 'mqtt.pub',  # necessary to be mqtt.pub
+                    'text': {
+                        'topic': topic,
+                        'payload': json.dumps({})
+                    }
+                })
         except ObjectDoesNotExist as e:
             print("OBJECT DOESNT EXIST")
             # print(e.what())
