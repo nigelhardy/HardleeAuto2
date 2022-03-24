@@ -44,8 +44,13 @@
         devicesSocket.send(JSON.stringify({'rgb_light_toggle': rgb_light_id}));
     }
     function activate_garage_door() {
-        console.log("Sending: Garage Door");
-        devicesSocket.send(JSON.stringify({'activate_garage_door': {} }));
+        let isExecuted = confirm("Are you sure to activate garage door?");
+        if(isExecuted)
+        {
+            console.log("Sending: Garage Door");
+            devicesSocket.send(JSON.stringify({'activate_garage_door': {} }));
+        }
+
     }
     </script>
 <body onload="setup_ws()">
