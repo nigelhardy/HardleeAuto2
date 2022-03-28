@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Welcome To Hardlee Automation</title>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 </head>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script>
+<script>
     const devicesSocket = new WebSocket(
     'ws://'
     + window.location.host
@@ -54,37 +55,43 @@
     }
     </script>
 <body onload="setup_ws()">
-<h1>Hardlee Automation</h1>
-<p>RF Outlets Status</p>
-{% if rf_outlets %}
-    <ul>
+<div class="w3-container w3-teal">
+    <h1>Hardlee Automation</h1>
+    <h2>RF Outlets Status</h2>
+    {% if rf_outlets %}
     {% for outlet in rf_outlets %}
-        <li>
-            <button onclick="toggle_rf_outlet({{outlet.id}})">Toggle</button>
-            {{ outlet.name }}:
-            <span id="rf_outlet_state_{{outlet.id}}"> {% if outlet.is_on %} On {% else %} Off {% endif %}</span>
-        </li>
+    <div class="w3-container w3-margin-left">
+        <div class="w3-container w3-margin">
+            <button style="width:100%;height:100px;" class="w3-button w3-white w3-border w3-border-blue w3-padding-large w3-round-large" onclick="toggle_rf_outlet({{outlet.id}})">
+                {{ outlet.name }}: <span id="rf_outlet_state_{{outlet.id}}"> {% if outlet.is_on %} On {% else %} Off {% endif %}</span></button>
+        </div>
+    </div>
     {% endfor %}
-    </ul>
-{% else %}
-    <p>No RF Outlets configured.</p>
-{% endif %}
-<p>RGB Lights Status</p>
+    {% else %}
+    <h2>No RF Outlets configured.</h2>
+    {% endif %}
+    <h2>RGB Lights Status</h2>
 
-{% if rgb_lights %}
-    <ul>
+    {% if rgb_lights %}
     {% for light in rgb_lights %}
-        <li>
-            <button onclick="toggle_rgb_light({{light.id}})">Toggle</button>
+    <div class="w3-container w3-margin-left">
+        <div class="w3-container w3-margin">
+            <button style="width:100%;height:100px;" class="w3-button w3-white w3-border w3-border-blue w3-padding-large w3-round-large"
+                    onclick="toggle_rgb_light({{light.id}})">Toggle</button>
             {{ light.name }}:
             <span id="rgb_light_state_{{light.id}}"> {% if light.is_on %} On, {% else %} Off, {% endif %} red={{ light.red }},
             green={{ light.green }},  blue={{ light.blue }}</span>
-        </li>
+        </div>
+    </div>
     {% endfor %}
-    </ul>
-{% else %}
-    <p>No RGB Lights configured.</p>
-{% endif %}
-<button onclick="activate_garage_door()">Garage Door</button>
+    {% else %}
+    <h2>No RGB Lights configured.</h2>
+    {% endif %}
+    <div class="w3-container w3-margin">
+        <div class="w3-container w3-margin">
+            <button style="width:100%;height:100px;" class="w3-button w3-white w3-border w3-border-blue w3-padding-large w3-round-large" onclick="activate_garage_door()">Garage Door</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
