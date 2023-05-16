@@ -89,8 +89,13 @@ class DevicesConsumer(WebsocketConsumer):
 
     def mqtt_garage_update(self, text_data, **kwargs):
         try:
-            print("MQTT GARAGE UPDATE")
-            self.send(text_data=json.dumps(text_data['message']))
+            message = "Unknown"
+            print(text_data['message'])
+            if text_data['message'] == "Open":
+                message = "Open"
+            elif text_data['message'] == "Closed":
+                message = "Closed"
+            self.send(text_data=json.dumps({'mqtt_garage_update': {'status': message}}))
         except ObjectDoesNotExist as e:
             # print(e.what())
             return

@@ -49,13 +49,12 @@ class MqttConsumer(SyncConsumer):
                 pass
             elif module_type == 'esp_lora':
                 if dev_id == 103 and info_type == "garage-status":
-                    print("ESP LORA2")
                     channel_layer = get_channel_layer()
                     async_to_sync(channel_layer.group_send)(
                         'device_updates',
                         {
                             'type': 'mqtt_garage_update',
-                            'message': {"mqtt_garage": 1}
+                            'message': payload
                         }
                     )
                 pass
