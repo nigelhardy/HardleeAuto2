@@ -41,8 +41,28 @@ class DevicesConsumer(WebsocketConsumer):
                     message = text_data_json['rgb_light_toggle']
                     light = RGBLight.objects.get(id=int(message))
                     light.toggle()
-                elif 'activate_garage_door':
-                    topic = "relay/101/garage-door"
+                elif 'open_garage_door' in text_data_json:
+                    topic = "esp_lora/103/open-garage"
+                    channel_layer = get_channel_layer()
+                    async_to_sync(channel_layer.send)('mqtt.pub', {  # also needs to be mqtt.pub
+                        'type': 'mqtt.pub',  # necessary to be mqtt.pub
+                        'text': {
+                            'topic': topic,
+                            'payload': json.dumps({})
+                        }
+                    })
+                elif 'close_garage_door' in text_data_json:
+                    topic = "esp_lora/103/close-garage"
+                    channel_layer = get_channel_layer()
+                    async_to_sync(channel_layer.send)('mqtt.pub', {  # also needs to be mqtt.pub
+                        'type': 'mqtt.pub',  # necessary to be mqtt.pub
+                        'text': {
+                            'topic': topic,
+                            'payload': json.dumps({})
+                        }
+                    })
+                elif 'query_garage_door' in text_data_json:
+                    topic = "esp_lora/103/query-garage"
                     channel_layer = get_channel_layer()
                     async_to_sync(channel_layer.send)('mqtt.pub', {  # also needs to be mqtt.pub
                         'type': 'mqtt.pub',  # necessary to be mqtt.pub
@@ -61,6 +81,16 @@ class DevicesConsumer(WebsocketConsumer):
     def mqtt_rgb_light_update(self, text_data, **kwargs):
         try:
             self.send(text_data=text_data['message'])
+        except ObjectDoesNotExist as e:
+            # print(e.what())
+            return
+        except TypeError as e:
+            return
+
+    def mqtt_garage_update(self, text_data, **kwargs):
+        try:
+            print("MQTT GARAGE UPDATE")
+            self.send(text_data=json.dumps(text_data['message']))
         except ObjectDoesNotExist as e:
             # print(e.what())
             return

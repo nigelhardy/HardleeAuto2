@@ -1,8 +1,12 @@
+on ubuntu: conda activate django
+
+read -s -p "Enter password:" MQTTPASS 
 
 python manage.py runserver 0.0.0.0
 python manage.py runworker mqtt
-django_mqtt_bridge -H localhost -p 1883 --topic rgb-light/#:2 hardleeauto.asgi:channel_layer --v
+django_mqtt_bridge -H localhost -p 1883 --topic rgb-light/#:2 hardleeauto.asgi:channel_layer --v -U nigel -P $MQTT
 
 listen to all
 mosquitto_sub -v -h localhost -p 1883 -t '#'
+mosquitto_sub -v -h 192.168.0.104 -p 1883 -t '#' -u nigel -P $MQTTPASS
 
