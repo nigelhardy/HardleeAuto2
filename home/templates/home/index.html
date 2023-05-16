@@ -16,6 +16,7 @@
     {
         devicesSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
+            console.log(data);
             if("rf_outlet_status" in data)
             {
                 var outlet = data.rf_outlet_status;
@@ -28,6 +29,11 @@
                 var light_str = (light.is_on ? 'On, ' : 'Off, ') + "red=" + light.red + ", green=" + light.green
                     + ", blue=" + light.blue;
                 document.getElementById("rgb_light_state_" + light.id).textContent = light_str;
+            }
+            else if("mqtt_garage_update" in data)
+            {
+                console.log("GOT GARAGE UPDATE!");
+                console.log(data);
             }
         };
     }
@@ -44,14 +50,21 @@
         console.log("Sending: RGB Light ID = " + rgb_light_id);
         devicesSocket.send(JSON.stringify({'rgb_light_toggle': rgb_light_id}));
     }
-    function activate_garage_door() {
-        let isExecuted = confirm("Are you sure to activate garage door?");
+    function open_garage_door() {
+        let isExecuted = confirm("Are you sure to open garage door?");
         if(isExecuted)
         {
-            console.log("Sending: Garage Door");
-            devicesSocket.send(JSON.stringify({'activate_garage_door': {} }));
+            console.log("Sending: Open Garage Door");
+            devicesSocket.send(JSON.stringify({'open_garage_door': {} }));
         }
-
+    }
+    function close_garage_door() {
+        console.log("Sending: Close Garage Door");
+        devicesSocket.send(JSON.stringify({'close_garage_door': {} }));
+    }
+    function query_garage_door() {
+        console.log("Sending: Garage Door Query");
+        devicesSocket.send(JSON.stringify({'query_garage_door': {} }));
     }
     </script>
 <body onload="setup_ws()">
@@ -89,7 +102,10 @@
     {% endif %}
     <div class="w3-container w3-margin">
         <div class="w3-container w3-margin">
-            <button style="width:100%;height:100px;" class="w3-button w3-white w3-border w3-border-blue w3-padding-large w3-round-large" onclick="activate_garage_door()">Garage Door</button>
+            <button style="width:100%;height:100px;" class="w3-button w3-white w3-border w3-border-blue w3-padding-large w3-round-large" onclick="open_garage_door()">Open Garage Door</button>
+            <button style="width:100%;height:100px;" class="w3-button w3-white w3-border w3-border-blue w3-padding-large w3-round-large" onclick="close_garage_door()">Close Garage Door</button>
+            <button style="width:100%;height:100px;" class="w3-button w3-white w3-border w3-border-blue w3-padding-large w3-round-large" onclick="query_garage_door()">Query Garage Door</button>
+
         </div>
     </div>
 </div>
