@@ -1,5 +1,6 @@
 # devices/consumers.py
 import json
+import string
 
 from asgiref.sync import async_to_sync
 from channels.consumer import SyncConsumer
@@ -90,14 +91,19 @@ class DevicesConsumer(WebsocketConsumer):
     def mqtt_garage_update(self, text_data, **kwargs):
         try:
             message = "Unknown"
-            print(text_data['message'])
-            if text_data['message'] == "Open":
-                message = "Open"
-            elif text_data['message'] == "Closed":
-                message = "Closed"
+            if 'message' in text_data:
+                # filter out any non printable from the mqtt message
+                incoming_msg = ''.join(c for c in text_data['message'] if c.isprintable())
+                if incoming_msg == "Open":
+                    message = "Open"
+                elif incoming_msg == "Closed":
+                    message = "Closed"
             self.send(text_data=json.dumps({'mqtt_garage_update': {'status': message}}))
         except ObjectDoesNotExist as e:
             # print(e.what())
+            print("Exception ocurred in mqtt_garage_update in consumers.py")
             return
         except TypeError as e:
+            print("TypeError mqtt_garage_update")
+
             return
