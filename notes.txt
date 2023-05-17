@@ -8,5 +8,10 @@ django_mqtt_bridge -H localhost -p 1883 --topic rgb-light/#:2 hardleeauto.asgi:c
 
 listen to all
 mosquitto_sub -v -h localhost -p 1883 -t '#'
-mosquitto_sub -v -h 192.168.0.104 -p 1883 -t '#' -u nigel -P $MQTTPASS
 
+mosquitto_sub -v -h 192.168.0.104 -p 1883 -t '#' -u nigel -P $MQTTPASS
+mosquitto_sub -v -h localhost -p 1883 -t '#' -u nigel -P $MQTTPASS
+
+Quietly set password:
+read -s -p "Enter Password: " MQTTPASS
+export MQTTPASS
