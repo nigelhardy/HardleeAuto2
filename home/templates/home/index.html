@@ -56,15 +56,18 @@
         if(isExecuted)
         {
             console.log("Sending: Open Garage Door");
+            document.getElementById("garage-status").textContent = "Garage Status: Sending Request";
             devicesSocket.send(JSON.stringify({'open_garage_door': {} }));
         }
     }
     function close_garage_door() {
+        document.getElementById("garage-status").textContent = "Garage Status: Sending Request";
         console.log("Sending: Close Garage Door");
         devicesSocket.send(JSON.stringify({'close_garage_door': {} }));
     }
     function query_garage_door() {
         console.log("Sending: Garage Door Query");
+        document.getElementById("garage-status").textContent = "Garage Status: Sending Request";
         devicesSocket.send(JSON.stringify({'query_garage_door': {} }));
     }
     </script>
