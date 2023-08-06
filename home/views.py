@@ -4,7 +4,7 @@ from django.template import loader
 from django.contrib.auth.decorators import login_required
 
 
-@login_required(login_url="admin/")
+@login_required()
 def index(request):
     rf_outlets = RF433Outlet.objects.all()
     rgb_lights = RGBLight.objects.all()
