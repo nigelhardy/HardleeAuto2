@@ -12,6 +12,9 @@ mosquitto_sub -v -h localhost -p 1883 -t '#'
 mosquitto_sub -v -h 192.168.0.104 -p 1883 -t '#' -u nigel -P $MQTTPASS
 mosquitto_sub -v -h localhost -p 1883 -t '#' -u nigel -P $MQTTPASS
 
+
+mosquitto_pub -h localhost -u nigel -P $MQTTPASS -p 1883 -m "json stuff" -t rgb-strip/104/set-light
+
 Quietly set password:
 read -s -p "Enter Password: " MQTTPASS
 export MQTTPASS
