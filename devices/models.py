@@ -71,7 +71,7 @@ class RGBLight(models.Model):
     green = models.IntegerField(default=0)
     blue = models.IntegerField(default=0)
     # static
-    rgb_topic = "rgb-light"
+    rgb_topic = "rgbw-strip"
 
     def toggle(self):
         print("toggle")

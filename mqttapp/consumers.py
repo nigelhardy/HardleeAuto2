@@ -25,8 +25,7 @@ class MqttConsumer(SyncConsumer):
             module_type = topic_split[0]
             dev_id = int(topic_split[1])
             info_type = topic_split[2]
-            print("module type=" + module_type)
-            if module_type == 'rgb-light' and info_type == "status":
+            if module_type == 'rgbw-strip' and info_type == "status":
                 light = RGBLight.objects.get(unique_id=dev_id)
                 if "red" in payload:
                     light.red = int(payload["red"])
@@ -34,8 +33,9 @@ class MqttConsumer(SyncConsumer):
                     light.green = int(payload["green"])
                 if "blue" in payload:
                     light.blue = int(payload["blue"])
+                print("devid=" + str(dev_id))
                 if "is_on" in payload:
-                    light.is_on = int(payload["is_on"])
+                    light.is_on = payload["is_on"]
                 light.save()
                 channel_layer = get_channel_layer()
                 async_to_sync(channel_layer.group_send)(
@@ -59,6 +59,7 @@ class MqttConsumer(SyncConsumer):
                     )
                 pass
         except:
+            print("EXCEPTION! in mqtt consumers")
             pass
 
         # channel_layer = get_channel_layer()
