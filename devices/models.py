@@ -70,6 +70,7 @@ class RGBLight(models.Model):
     red = models.IntegerField(default=0)
     green = models.IntegerField(default=0)
     blue = models.IntegerField(default=0)
+    hexcolor = models.CharField(max_length=32)
     # static
     rgb_topic = "rgbw-strip"
 
@@ -79,10 +80,9 @@ class RGBLight(models.Model):
         self.is_on = not self.is_on
         print(self.is_on)
         self.set_color_mqtt()
-
     def get_state_dict(self):
         return {"id": self.id, "red": self.red, "green": self.green, "blue": self.blue, "is_on": self.is_on,
-                "is_active": self.is_active}
+                "is_active": self.is_active, "unique_id": self.unique_id}
 
     def get_json_state(self):
         return json.dumps({
@@ -105,6 +105,10 @@ class RGBLight(models.Model):
             }
         })
         pass
+    def save(self, *args, **kwargs):
+        self.hexcolor = f'{self.red:02X}{self.green:02X}{self.blue:02X}'
+        super(RGBLight, self).save(*args, **kwargs)
+        self.set_color_mqtt()
 
     def __str__(self):
         return self.name

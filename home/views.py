@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 def index(request):
     rf_outlets = RF433Outlet.objects.all()
     rgb_lights = RGBLight.objects.all()
+
     template = loader.get_template('home/index.html')
     context = {
         'rf_outlets': rf_outlets,
