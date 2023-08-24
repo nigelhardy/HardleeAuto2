@@ -33,6 +33,19 @@ class DevicesConsumer(WebsocketConsumer):
             print(text_data)
             try:
                 text_data_json = json.loads(text_data)
+                if 'rgb_light_color_update' in text_data_json:
+                    id = -1
+                    hexcolor = "000000"
+                    if 'id' in text_data_json['rgb_light_color_update']:
+                        id = text_data_json['rgb_light_color_update']['id']
+                    if 'hexcolor' in text_data_json['rgb_light_color_update']:
+                        hexcolor = text_data_json['rgb_light_color_update']['hexcolor']
+                    light = RGBLight.objects.get(unique_id=id)
+                    light.red = int(hexcolor[1:3],16)
+                    light.green = int(hexcolor[3:5],16)
+                    light.blue = int(hexcolor[5:7],16)
+                    light.set_color_mqtt()
+
                 if 'rf_outlet_toggle' in text_data_json:
                     message = text_data_json['rf_outlet_toggle']
                     outlet = RF433Outlet.objects.get(id=int(message))

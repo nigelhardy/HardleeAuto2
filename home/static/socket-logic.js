@@ -17,9 +17,11 @@
             else if("rgb_light_status" in data)
             {
                 var light = data.rgb_light_status;
-                var light_str = (light.is_on ? 'On, ' : 'Off, ') + "red=" + light.red + ", green=" + light.green
-                    + ", blue=" + light.blue;
-                document.getElementById("rgb_light_state_" + light.id).textContent = light_str;
+                var redhex = ('00' + light.red.toString(16).toUpperCase()).slice(-2);
+                var greenhex = ('00' + light.green.toString(16).toUpperCase()).slice(-2);
+                var bluehex = ('00' + light.blue.toString(16).toUpperCase()).slice(-2);
+                document.getElementById("rgb-color-input-" + light.unique_id).value = "#" + redhex + greenhex + bluehex;
+                document.getElementById("rgb-color-button-" + light.unique_id).value = (light.is_on ? 'On, ' : 'Off, ');
             }
             else if("mqtt_garage_update" in data)
             {
@@ -64,6 +66,11 @@
         console.log("Sending: RGB Light ID = " + rgb_light_id);
         devicesSocket.send(JSON.stringify({'rgb_light_toggle': rgb_light_id}));
     }
+    function update_rgb_light_color(rgb_light_id, color) {
+        check_ws();
+        console.log("Sending: RGB Light Color to ID = " + rgb_light_id);
+        devicesSocket.send(JSON.stringify({'rgb_light_color_update': {"id": rgb_light_id, "hexcolor": color}}));
+    }
     function open_garage_door() {
         check_ws();
         let isExecuted = confirm("Are you sure to open garage door?");
@@ -85,4 +92,10 @@
         console.log("Sending: Garage Door Query");
         document.getElementById("garage-status").textContent = "Garage Status: Sending Request";
         devicesSocket.send(JSON.stringify({'query_garage_door': {} }));
+    }
+    function send_color(unique_id)
+    {
+        var color = document.getElementById("rgb-color-input-" + unique_id).value;
+        console.log("Sending color: " + color + " to id: " + unique_id);
+        update_rgb_light_color(unique_id, color);
     }
