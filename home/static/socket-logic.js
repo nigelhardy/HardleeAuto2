@@ -21,7 +21,7 @@
                 var greenhex = ('00' + light.green.toString(16).toUpperCase()).slice(-2);
                 var bluehex = ('00' + light.blue.toString(16).toUpperCase()).slice(-2);
                 document.getElementById("rgb-color-input-" + light.unique_id).value = "#" + redhex + greenhex + bluehex;
-                document.getElementById("rgb-color-button-" + light.unique_id).value = (light.is_on ? 'On, ' : 'Off, ');
+                document.getElementById("rgb-color-button-" + light.unique_id).innerHTML = (light.is_on ? 'On' : 'Off');
             }
             else if("mqtt_garage_update" in data)
             {
