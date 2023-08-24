@@ -108,7 +108,6 @@ class RGBLight(models.Model):
     def save(self, *args, **kwargs):
         self.hexcolor = f'{self.red:02X}{self.green:02X}{self.blue:02X}'
         super(RGBLight, self).save(*args, **kwargs)
-        self.set_color_mqtt()
 
     def __str__(self):
         return self.name
