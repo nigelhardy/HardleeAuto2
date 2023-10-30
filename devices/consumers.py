@@ -119,6 +119,8 @@ class DevicesConsumer(WebsocketConsumer):
                     message = "Success Initiating Door Open"
                 elif incoming_msg == "Fail:Open":
                     message = "Fail Initiating Door Open"
+                else:
+                    message = incoming_msg
             self.send(text_data=json.dumps({'mqtt_garage_update': {'status': message}}))
         except ObjectDoesNotExist as e:
             # print(e.what())

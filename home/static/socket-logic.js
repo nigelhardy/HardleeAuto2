@@ -3,6 +3,7 @@
         + window.location.host
         + '/ws/devices/'
     );
+    var timeoutTimer = null;
     function setup_ws()
     {
         devicesSocket.onmessage = function(e) {
@@ -27,6 +28,7 @@
             {
                 console.log("GOT GARAGE UPDATE!");
                 console.log(data);
+		clearTimeout(timeoutTimer);
                 document.getElementById("garage-status").textContent = "Garage Status: " + data.mqtt_garage_update.status;
             }
         };
@@ -71,6 +73,9 @@
         console.log("Sending: RGB Light Color to ID = " + rgb_light_id);
         devicesSocket.send(JSON.stringify({'rgb_light_color_update': {"id": rgb_light_id, "hexcolor": color}}));
     }
+    function no_response_from_esp() {
+	document.getElementId("garage-status").textContent = "No response from sending unit.";
+    }
     function open_garage_door() {
         check_ws();
         let isExecuted = confirm("Are you sure to open garage door?");
@@ -78,6 +83,7 @@
         {
             console.log("Sending: Open Garage Door");
             document.getElementById("garage-status").textContent = "Garage Status: Sending Request";
+	    setTimeout(no_response_from_esp, 10000);
             devicesSocket.send(JSON.stringify({'open_garage_door': {} }));
         }
     }
