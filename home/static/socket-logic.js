@@ -74,7 +74,7 @@
         devicesSocket.send(JSON.stringify({'rgb_light_color_update': {"id": rgb_light_id, "hexcolor": color}}));
     }
     function no_response_from_esp() {
-	document.getElementId("garage-status").textContent = "No response from sending unit.";
+	document.getElementById("garage-status").textContent = "Garage Status: No response from sending unit.";
     }
     function open_garage_door() {
         check_ws();
@@ -90,6 +90,7 @@
     function close_garage_door() {
         check_ws();
         document.getElementById("garage-status").textContent = "Garage Status: Sending Request";
+	setTimeout(no_response_from_esp, 10000);
         console.log("Sending: Close Garage Door");
         devicesSocket.send(JSON.stringify({'close_garage_door': {} }));
     }
@@ -97,6 +98,7 @@
         check_ws();
         console.log("Sending: Garage Door Query");
         document.getElementById("garage-status").textContent = "Garage Status: Sending Request";
+	setTimeout(no_response_from_esp, 10000);
         devicesSocket.send(JSON.stringify({'query_garage_door': {} }));
     }
     function send_color(unique_id)
