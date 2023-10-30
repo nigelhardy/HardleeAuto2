@@ -83,14 +83,14 @@
         {
             console.log("Sending: Open Garage Door");
             document.getElementById("garage-status").textContent = "Garage Status: Sending Request";
-	    setTimeout(no_response_from_esp, 10000);
+	    timeoutTimer = setTimeout(no_response_from_esp, 10000);
             devicesSocket.send(JSON.stringify({'open_garage_door': {} }));
         }
     }
     function close_garage_door() {
         check_ws();
         document.getElementById("garage-status").textContent = "Garage Status: Sending Request";
-	setTimeout(no_response_from_esp, 10000);
+	timeoutTimer = setTimeout(no_response_from_esp, 10000);
         console.log("Sending: Close Garage Door");
         devicesSocket.send(JSON.stringify({'close_garage_door': {} }));
     }
@@ -98,7 +98,7 @@
         check_ws();
         console.log("Sending: Garage Door Query");
         document.getElementById("garage-status").textContent = "Garage Status: Sending Request";
-	setTimeout(no_response_from_esp, 10000);
+	timeoutTimer = setTimeout(no_response_from_esp, 10000);
         devicesSocket.send(JSON.stringify({'query_garage_door': {} }));
     }
     function send_color(unique_id)
