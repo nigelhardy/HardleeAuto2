@@ -2,10 +2,13 @@ from django.http import HttpResponse
 from devices.models import RF433Outlet, RGBLight
 from django.template import loader
 from django.contrib.auth.decorators import login_required
+import logging
 
+logger = logging.getLogger(__name__)
 
 @login_required()
 def index(request):
+
     rf_outlets = RF433Outlet.objects.all()
     rgb_lights = RGBLight.objects.all()
 

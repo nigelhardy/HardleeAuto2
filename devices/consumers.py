@@ -1,6 +1,7 @@
 # devices/consumers.py
 import json
 import string
+import logging
 
 from asgiref.sync import async_to_sync
 from channels.consumer import SyncConsumer
@@ -9,6 +10,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from devices.models import RF433Outlet, RGBLight
 from channels.layers import get_channel_layer
 
+logger = logging.getLogger(__name__)
 
 class DevicesConsumer(WebsocketConsumer):
     def connect(self):
@@ -30,7 +32,7 @@ class DevicesConsumer(WebsocketConsumer):
     def receive(self, text_data, **kwargs):
         username = self.scope["user"]
         if username.is_authenticated:
-            print(text_data)
+            logger.info(text_data)
             try:
                 text_data_json = json.loads(text_data)
                 if 'rgb_light_color_update' in text_data_json:
@@ -86,8 +88,8 @@ class DevicesConsumer(WebsocketConsumer):
                         }
                     })
             except ObjectDoesNotExist as e:
-                print("OBJECT DOESNT EXIST")
-                # print(e.what())
+                logger.error("OBJECT DOESNT EXIST")
+                # logger.error(e.what())
                 return
             except TypeError as e:
                 return
@@ -96,7 +98,7 @@ class DevicesConsumer(WebsocketConsumer):
         try:
             self.send(text_data=text_data['message'])
         except ObjectDoesNotExist as e:
-            # print(e.what())
+            # logger.error(e.what())
             return
         except TypeError as e:
             return
@@ -123,10 +125,10 @@ class DevicesConsumer(WebsocketConsumer):
                     message = incoming_msg
             self.send(text_data=json.dumps({'mqtt_garage_update': {'status': message}}))
         except ObjectDoesNotExist as e:
-            # print(e.what())
-            print("Exception ocurred in mqtt_garage_update in consumers.py")
+            # logger.error(e.what())
+            logger.error("Exception ocurred in mqtt_garage_update in consumers.py")
             return
         except TypeError as e:
-            print("TypeError mqtt_garage_update")
+            logger.error("TypeError mqtt_garage_update")
 
             return
