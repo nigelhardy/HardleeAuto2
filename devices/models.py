@@ -2,6 +2,9 @@ from asgiref.sync import async_to_sync
 from django.db import models
 import socket
 import json
+import logging
+
+logger = logging.getLogger(__name__)
 
 from channels.layers import get_channel_layer
 
@@ -15,10 +18,10 @@ class RF433Module(models.Model):
     def send_rf_outlet_command(self, rf_outlet):
         topic = self.rf433_topic + "/" + str(self.unique_id) + "/send-command"
         channel_layer = get_channel_layer()
-        print("topic sending " + topic)
+        logger.info("topic sending " + topic)
         status = {"id": rf_outlet.id, "is_on": rf_outlet.is_on,
                   "rf_payload": rf_outlet.get_payload()}
-        print(status)
+        logger.info(status)
         async_to_sync(channel_layer.send)('mqtt.pub', {  # also needs to be mqtt.pub
             'type': 'mqtt.pub',  # necessary to be mqtt.pub
             'text': {
@@ -45,7 +48,7 @@ class RF433Outlet(models.Model):
             return self.on_payload + 9
 
     def toggle(self):
-        print(self.is_on)
+        logger.info(self.is_on)
         self.is_on = not self.is_on
         self.rf_433_mqtt.send_rf_outlet_command(self)
         self.save()
@@ -75,10 +78,10 @@ class RGBLight(models.Model):
     rgb_topic = "rgbw-strip"
 
     def toggle(self):
-        print("toggle")
-        print(self.is_on)
+        logger.info("toggle")
+        logger.info(self.is_on)
         self.is_on = not self.is_on
-        print(self.is_on)
+        logger.info(self.is_on)
         self.set_color_mqtt()
     def get_state_dict(self):
         return {"id": self.id, "red": self.red, "green": self.green, "blue": self.blue, "is_on": self.is_on,
@@ -92,11 +95,11 @@ class RGBLight(models.Model):
     def set_color_mqtt(self):
         topic = self.rgb_topic + "/" + str(self.unique_id) + "/set-color"
         channel_layer = get_channel_layer()
-        print("topic sending " + topic)
-        print(self.is_on)
+        logger.info("topic sending " + topic)
+        logger.info(self.is_on)
         status = {"id": self.id, "red": self.red, "green": self.green, "blue": self.blue, "is_on": self.is_on,
                   "is_active": self.is_active}
-        print(status)
+        logger.info(status)
         async_to_sync(channel_layer.send)('mqtt.pub', {  # also needs to be mqtt.pub
             'type': 'mqtt.pub',  # necessary to be mqtt.pub
             'text': {

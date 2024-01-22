@@ -27,6 +27,23 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["192.168.0.200", "hardlee.auto", "hardlee.ddns.net", "192.168.0.104"]
 
+LOGGING = {
+    "version": 1,  # the dictConfig format version
+    "disable_existing_loggers": False,  # retain the default loggers
+    "handlers": {
+        "file": {
+            "class": "logging.FileHandler",
+            "filename": "log-hardleeauto.log",
+            "level": "DEBUG",
+        },
+    },
+    "loggers": {
+        "": {
+            "level": "DEBUG",
+            "handlers": ["file"],
+        },
+    },
+}
 
 # Application definition
 

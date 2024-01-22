@@ -1,6 +1,7 @@
 import datetime
 import django
 import os
+import logging
 from asgiref.sync import async_to_sync
 from channels.consumer import SyncConsumer
 from channels.layers import get_channel_layer
@@ -8,6 +9,7 @@ import paho.mqtt.client as paho
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hardleeauto.settings')
 
 django.setup()
+logger = logging.getLogger(__name__)
 from devices.models import RF433Outlet, RGBLight
 
 
@@ -20,12 +22,13 @@ class MqttConsumer(SyncConsumer):
         try:
             topic_split = topic.split("/")
             if len(topic_split) != 3:
-                print("Invalid topic! " + topic)
+                logger.warning("Invalid topic! " + topic)
                 return
             module_type = topic_split[0]
             dev_id = int(topic_split[1])
             info_type = topic_split[2]
             if module_type == 'rgbw-strip' and info_type == "status":
+                logger.info("sub topic: {0}, payload: {1}".format(topic, payload))
                 light = RGBLight.objects.get(unique_id=dev_id)
                 if "red" in payload:
                     light.red = int(payload["red"])
@@ -33,7 +36,7 @@ class MqttConsumer(SyncConsumer):
                     light.green = int(payload["green"])
                 if "blue" in payload:
                     light.blue = int(payload["blue"])
-                print("devid=" + str(dev_id))
+                logger.info("devid=" + str(dev_id))
                 if "is_on" in payload:
                     light.is_on = payload["is_on"]
                 light.save()
@@ -49,6 +52,7 @@ class MqttConsumer(SyncConsumer):
                 pass
             elif module_type == 'esp_lora':
                 if dev_id == 103 and info_type == "garage-status":
+                    logger.info("sub topic: {0}, payload: {1}".format(topic, payload))
                     channel_layer = get_channel_layer()
                     async_to_sync(channel_layer.group_send)(
                         'device_updates',
@@ -57,9 +61,14 @@ class MqttConsumer(SyncConsumer):
                             'message': payload
                         }
                     )
-                pass
-        except:
-            print("EXCEPTION! in mqtt consumers")
+                elif dev_id == 103 and info_type == "logging":
+                    now = datetime.datetime.now()
+                    now_string = now.strftime("%m/%d/%Y %H:%M:%S")
+                    logger.info(now_string + " " + str(payload))
+
+        except Exception as e:
+            logger.error("EXCEPTION! in mqtt consumers")
+            logger.error(e)
             pass
 
         # channel_layer = get_channel_layer()
@@ -70,11 +79,12 @@ class MqttConsumer(SyncConsumer):
         #         'message': {"rf_outlet_toggle": 1}
         #     }
         # )
-        print("sub topic: {0}, payload: {1}".format(topic, payload))
+
 
     def mqtt_pub(self, event):
         topic = event['text']['topic']
         payload = event['text']['payload']
         # do something with topic and payload
 
-        print("pub topic: {0}, payload: {1}".format(topic, payload))
+        logger.debug("pub topic: {0}, payload: {1}".format(topic, payload))
+
