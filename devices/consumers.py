@@ -52,7 +52,13 @@ class DevicesConsumer(WebsocketConsumer):
                     message = text_data_json['rf_outlet_toggle']
                     outlet = RF433Outlet.objects.get(id=int(message))
                     outlet.toggle()
-                    self.send(text_data=outlet.get_json_state())
+                    # self.send(text_data=outlet.get_json_state())
+                    channel_layer = get_channel_layer()
+                    async_to_sync(channel_layer.group_send)(
+                        'device_updates', {
+                            'type': 'mqtt_rgb_light_update',
+                            'message': outlet.get_json_state()
+                    })
                 elif 'rgb_light_toggle' in text_data_json:
                     message = text_data_json['rgb_light_toggle']
                     light = RGBLight.objects.get(id=int(message))
