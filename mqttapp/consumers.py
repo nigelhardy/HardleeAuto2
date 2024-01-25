@@ -48,13 +48,13 @@ class MqttConsumer(SyncConsumer):
                         'message': light.get_json_state()
                     }
                 )
-            elif module_type == '433_recv':
+            elif module_type == 'recv_433' and info_type == "recv-rf":
                 logger.info("sub topic: {0}, payload: {1}".format(topic, payload))
                 logger.info("payload int = " + str(int(payload)))
                 isOnButton = True
-                outlet = RF433Outlet.objects.filter(on_payload=int(payload)).first()
+                outlet = RF433Outlet.objects.filter(recv_trigger=int(payload)).first()
                 if not outlet:
-                    outlet = RF433Outlet.objects.filter(on_payload=int(payload)+9).first()
+                    outlet = RF433Outlet.objects.filter(recv_trigger=int(payload)+9).first()
                     isOnButton = False
                 if outlet:
                     logger.info("Found Outlet, on = " + str(isOnButton))

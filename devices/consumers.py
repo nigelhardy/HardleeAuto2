@@ -104,7 +104,7 @@ class DevicesConsumer(WebsocketConsumer):
         try:
             self.send(text_data=text_data['message'])
         except ObjectDoesNotExist as e:
-            # logger.error(e.what())
+            logger.error(e.what())
             return
         except TypeError as e:
             return
