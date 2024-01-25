@@ -38,6 +38,7 @@ class RF433Module(models.Model):
 class RF433Outlet(models.Model):
     name = models.CharField(max_length=300)
     on_payload = models.IntegerField(default=-1)
+    recv_trigger = models.IntegerField(default=-1)
     is_on = models.BooleanField(default=False)
     rf_433_mqtt = models.ForeignKey(RF433Module, on_delete=models.CASCADE)
 
