@@ -1,12 +1,4 @@
-// rf69 demo tx rx.pde
 // -*- mode: C++ -*-
-// Example sketch showing how to create a simple addressed, reliable messaging client
-// with the RH_RF69 class. RH_RF69 class does not provide for addressing or
-// reliability, so you should only use RH_RF69  if you do not need the higher
-// level messaging abilities.
-// It is designed to work with the other example rf69_server.
-// Demonstrates the use of AES encryption, setting the frequency and modem 
-// configuration
 
 #include <SPI.h>
 #include <RH_RF69.h>
@@ -20,7 +12,6 @@
 // who am i? (server address)
 #define MY_ADDRESS     1
 
-
 #if defined (__AVR_ATmega32U4__) // Feather 32u4 w/Radio
   #define RFM69_CS      8
   #define RFM69_INT     7
@@ -28,78 +19,23 @@
   #define LED           13
 #endif
 
-#if defined(ADAFRUIT_FEATHER_M0) || defined(ADAFRUIT_FEATHER_M0_EXPRESS) || defined(ARDUINO_SAMD_FEATHER_M0)
-  // Feather M0 w/Radio
-  #define RFM69_CS      8
-  #define RFM69_INT     3
-  #define RFM69_RST     4
-  #define LED           13
-#endif
-
-#if defined (__AVR_ATmega328P__)  // Feather 328P w/wing
-  #define RFM69_INT     3  // 
-  #define RFM69_CS      4  //
-  #define RFM69_RST     2  // "A"
-  #define LED           13
-#endif
-
-#if defined(ESP8266)    // ESP8266 feather w/wing
-  #define RFM69_CS      2    // "E"
-  #define RFM69_IRQ     15   // "B"
-  #define RFM69_RST     16   // "D"
-  #define LED           0
-#endif
-
-#if defined(ARDUINO_ADAFRUIT_FEATHER_ESP32S2) || defined(ARDUINO_NRF52840_FEATHER) || defined(ARDUINO_NRF52840_FEATHER_SENSE)
-  #define RFM69_INT     9  // "A"
-  #define RFM69_CS      10  // "B"
-  #define RFM69_RST     11  // "C"
-  #define LED           13
-
-#elif defined(ESP32)    // ESP32 feather w/wing
-  #define RFM69_RST     13   // same as LED
-  #define RFM69_CS      33   // "B"
-  #define RFM69_INT     27   // "A"
-  #define LED           13
-#endif
-
-#if defined(ARDUINO_NRF52832_FEATHER)
-  /* nRF52832 feather w/wing */
-  #define RFM69_RST     7   // "A"
-  #define RFM69_CS      11   // "B"
-  #define RFM69_INT     31   // "C"
-  #define LED           17
-#endif
-
-/* Teensy 3.x w/wing
-#define RFM69_RST     9   // "A"
-#define RFM69_CS      10   // "B"
-#define RFM69_IRQ     4    // "C"
-#define RFM69_IRQN    digitalPinToInterrupt(RFM69_IRQ )
-*/
- 
-/* WICED Feather w/wing 
-#define RFM69_RST     PA4     // "A"
-#define RFM69_CS      PB4     // "B"
-#define RFM69_IRQ     PA15    // "C"
-#define RFM69_IRQN    RFM69_IRQ
-*/
-
 // Singleton instance of the radio driver
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
 
 // Class to manage message delivery and receipt, using the driver declared above
 RHReliableDatagram rf69_manager(rf69, MY_ADDRESS);
 
-
-int16_t packetnum = 0;  // packet counter, we increment per xmission
-bool garageClosed = false;
+unsigned long clickerStartTime  = 0;
+bool clickerRelayActive         = false;
+int16_t packetnum               = 0;  // packet counter, we increment per xmission
+bool garageClosed               = false;
 
 // constants won't change. They're used here to set pin numbers:
-const int reedSwitchInputPin = 11;  // the number of the pushbutton pin
-const int relayGarageDoorOpener = 12;
+const int reedSwitchInputPin    = 19;
+const int relayGarageDoorOpener = 20;
+const int relayHoldTimeMs       = 2500;
 // variables will change:
-int reedSwitchState = 0;  // variable for reading the pushbutton status
+int reedSwitchState = LOW;  // variable for reading the pushbutton status
 
 void setup() 
 {
@@ -110,7 +46,6 @@ void setup()
   pinMode(reedSwitchInputPin, INPUT);
   pinMode(relayGarageDoorOpener, OUTPUT);
   digitalWrite(relayGarageDoorOpener, LOW);
-  pinMode(LED, OUTPUT);     
   pinMode(RFM69_RST, OUTPUT);
   digitalWrite(RFM69_RST, LOW);
 
@@ -139,31 +74,43 @@ void setup()
   rf69.setTxPower(20, true);  // range from 14-20 for power, 2nd arg must be true for 69HCW
 
   // The encryption key has to be the same as the one in the server
-  uint8_t key[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-                    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+  // TODO for some reason larger hex values seem to break this, not sure if rx or tx side...
+  // for now it is not the default and will work okay
+  uint8_t key[] = { 0x29, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+                    0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09};
   rf69.setEncryptionKey(key);
   
   pinMode(LED, OUTPUT);
+  digitalWrite(LED, HIGH);
 
   Serial.print("RFM69 radio @");  Serial.print((int)RF69_FREQ);  Serial.println(" MHz");
 }
 
 
 // Dont put this on the stack:
-uint8_t data[64];
+uint8_t data[20];
 // Dont put this on the stack:
 uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
 
 void loop() {
   // read the state of the pushbutton value:
   reedSwitchState = digitalRead(reedSwitchInputPin);
-  if(garageClosed != (reedSwitchState == LOW))
+  if(garageClosed != (reedSwitchState == HIGH))
   {
     Serial.print("GarageClosed = ");
     Serial.println(garageClosed);
+    digitalWrite(LED, garageClosed ? HIGH : LOW);
   }
-  garageClosed = reedSwitchState == LOW;
-
+  garageClosed = reedSwitchState == HIGH;
+  if(clickerRelayActive && clickerStartTime + 2500 > millis())
+  {
+    digitalWrite(relayGarageDoorOpener, HIGH);
+  }
+  else if(clickerRelayActive)
+  {
+    digitalWrite(relayGarageDoorOpener, LOW);
+    clickerRelayActive = false;
+  }
   if (rf69_manager.available())
   {
     // Wait for a message addressed to us from the client
@@ -178,6 +125,7 @@ void loop() {
       Serial.print(rf69.lastRssi());
       Serial.print("] : ");
       Serial.println((char*)buf);
+      memset(data, 0, sizeof(data));
       if((char)buf[0] == 'c')
       {
         closeGarage();
@@ -190,8 +138,6 @@ void loop() {
       {
         queryGarageState();
       }
-      Blink(LED, 40, 3); //blink LED 3 times, 40ms between blinks
-
       // Send a reply back to the originator client
       if (!rf69_manager.sendtoWait(data, sizeof(data), from))
         Serial.println("Sending failed (no ack)");
@@ -201,45 +147,44 @@ void loop() {
 
 void openGarage()
 {
+  Serial.println("Open Garage Cmd");
+
   if(garageClosed)
   {
-    strcpy(data, "OK");
+    strcpy(data, "OK:Open");
+    clickerStartTime = millis();
+    clickerRelayActive = true;
   }
   else
   {
-    strcpy(data, "Fail:AlreadyOpen");    
+    strcpy(data, "Fail:Open");    
   }
 }
 
 void closeGarage()
 {
+  Serial.println("Close Garage Cmd");
   if(!garageClosed)
   {
-    strcpy(data, "OK");
+    strcpy(data, "OK:Close");
+    clickerStartTime = millis();
+    clickerRelayActive = true;
   }
   else
   {
-    strcpy(data, "Fail:AlreadyClosed");    
+    strcpy(data, "Fail:Close");    
   }
 }
 
 void queryGarageState()
 {
+    Serial.println("Query Garage Cmd");
   if(!garageClosed)
   {
     strcpy(data, "Open");
   }
   else
   {
-    strcpy("data", "Closed");    
-  }
-}
-
-void Blink(byte PIN, byte DELAY_MS, byte loops) {
-  for (byte i=0; i<loops; i++)  {
-    digitalWrite(PIN,HIGH);
-    delay(DELAY_MS);
-    digitalWrite(PIN,LOW);
-    delay(DELAY_MS);
+    strcpy(data, "Closed");    
   }
 }
