@@ -15,13 +15,9 @@ MQTTClient client;
 
 RCSwitch mySwitch = RCSwitch();
 
+const int RF_SEND_PIN = D2;
 long rf_payload = -1;
 int device_id = 101;
-
-const long garage_relay_duration = 1000;
-unsigned long garage_relay_activate_millis = 0;
-const int garage_relay_pin = 12;
-bool garage_relay_on = false;
 
 void connect_mqtt()
 {   
@@ -34,11 +30,12 @@ void connect_mqtt()
   }
   Serial.println("\nconnected!");
   client.subscribe("rf-433/" + String(device_id) + "/send-command", 2);
-  client.subscribe("relay/" + String(device_id) + "/garage-door", 2);
+
+  client.publish("startup", client_id);
+
 }
 
 void messageReceived(String &topic, String &payload) {
-  
 
   char topic_search[100];
   strcpy(topic_search, topic.c_str());
@@ -65,14 +62,7 @@ void messageReceived(String &topic, String &payload) {
       }
       rf_payload = doc["rf_payload"];
   }
-  if(strcmp(pch, "garage-door") == 0)
-  {
-    Serial.println("Activating Garage Door!");
-    garage_relay_activate_millis = millis();
-    garage_relay_on = true;
-    digitalWrite(garage_relay_pin, HIGH);
-    return;
-  }
+
   Serial.println("incoming: " + topic + " - rf payload = " + String(rf_payload));
 
   // Note: Do not use the client in the callback to publish, subscribe or
@@ -85,14 +75,14 @@ void setup() {
   Serial.begin ( 115200 );
   delay(10);
   WiFiManager wifiManager;
-  wifiManager.setSTAStaticIPConfig(IPAddress(192,168,0,100), IPAddress(192,168,0,1), IPAddress(255,255,255,0), IPAddress(192,168,0,201)); // optional DNS 4th argument
+  wifiManager.setSTAStaticIPConfig(IPAddress(192,168,0,102), IPAddress(192,168,0,1), IPAddress(255,255,255,0), IPAddress(192,168,0,201)); // optional DNS 4th argument
   wifiManager.autoConnect(ssid, password);
 
   client.begin("hardlee.mqtt", net);
   client.onMessage(messageReceived);
   
-  // Transmitter is connected to Arduino Pin #10  
-  mySwitch.enableTransmit(10);
+  // Transmitter is connected to D2 (GPIO 4)  
+  mySwitch.enableTransmit(RF_SEND_PIN);
 
   mySwitch.setProtocol(1);
 
@@ -103,31 +93,19 @@ void setup() {
   mySwitch.setRepeatTransmit(15);
   
   connect_mqtt();
-  pinMode(garage_relay_pin, OUTPUT);
-  digitalWrite(garage_relay_pin, LOW);
-
-
 }
 
 void loop() {
+  if (!client.connected()) {
+    connect_mqtt();
+  }
   client.loop();
-  delay(10);
   if(rf_payload != -1)
   {
     mySwitch.send(rf_payload, 24);
     rf_payload = -1;
-  }
-  if(garage_relay_on == true)
-  {
-    unsigned long current_millis = millis();
-    if(current_millis - garage_relay_activate_millis >= garage_relay_duration)
-    {
-      Serial.println("'un'-pressing garage door button");
-      garage_relay_on = false;
-      digitalWrite(garage_relay_pin, LOW);
-    }
-  }
-  if (!client.connected()) {
-    connect_mqtt();
+    client.publish("rf-433-" + String(device_id) + "/ack", String(rf_payload));
+
+    delay(10);
   }
 }
