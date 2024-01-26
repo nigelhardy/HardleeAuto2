@@ -14,16 +14,19 @@ const char *password = std::getenv("WIFI_PASS");
 WiFiClient net;
 MQTTClient client;
 int device_id = 102;
+unsigned long long lastLog = 0;
+bool testOnOff = false;
 
 RCSwitch mySwitch = RCSwitch();
 
 void setup() {
   Serial.begin ( 115200 );
-  mySwitch.enableReceive(0); // Interrupt 0 - D3/GPIO-0 on ESP12E
+  mySwitch.enableReceive(4); // NOT RELEVANT FOR ESP32 Interrupt 0 - D3/GPIO-0 on ESP12E
 
   delay(10);
   WiFiManager wifiManager;
-  wifiManager.setSTAStaticIPConfig(IPAddress(192,168,0,100), IPAddress(192,168,0,1), IPAddress(255,255,255,0), IPAddress(192,168,0,201)); // optional DNS 4th argument
+  wifiManager.setHostname("ESP-RF433-Receiver");
+  wifiManager.setSTAStaticIPConfig(IPAddress(192,168,0,115), IPAddress(192,168,0,1), IPAddress(255,255,255,0), IPAddress(192,168,0,201)); // optional DNS 4th argument
   wifiManager.autoConnect(ssid, password);
   Serial.println("\nsetup!");
   client.begin("hardlee.mqtt", net);
@@ -31,6 +34,9 @@ void setup() {
 }
 
 void loop() {
+  if (!client.connected()) {
+    connect_mqtt();
+  }
   if (mySwitch.available()) {
     
     Serial.print("Received ");
@@ -44,11 +50,23 @@ void loop() {
 
     mySwitch.resetAvailable();
 
-    client.publish("/recv433", String(val));
+    client.publish("recv_433/" + String(device_id) + "/recv-rf", String(val));
   }
+  if(lastLog + 60000 < millis())
+  {
+    lastLog = millis();
+    testOnOff = !testOnOff;
+    client.publish("recv_433/" + String(device_id) + "/ack", "Still Alive!");
 
-  if (!client.connected()) {
-    connect_mqtt();
+    // if(testOnOff)
+    // {
+    //   client.publish("recv_433/" + String(device_id) + "/recv-rf", String(268035));
+    // }
+    // else
+    // {
+    //   client.publish("recv_433/" + String(device_id) + "/recv-rf", String(268026));
+    // }
+
   }
     
 }
@@ -63,6 +81,7 @@ void connect_mqtt()
     delay(1000);
   }
   Serial.println("\nconnected!");
+  client.publish("recv_433/" + String(device_id) + "/ack", "Startup");
 }
 
 void messageReceived(String &topic, String &payload) {
