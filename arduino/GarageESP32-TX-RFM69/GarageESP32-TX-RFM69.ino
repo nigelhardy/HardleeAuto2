@@ -8,6 +8,7 @@
  cf = close failed
  of = open failed
  tf = general unknown timeout from open or close attempt
+ uo = unexpectedly opened
 */
 
 #include <SPI.h>
