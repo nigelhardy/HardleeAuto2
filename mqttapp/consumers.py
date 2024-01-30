@@ -72,7 +72,7 @@ class MqttConsumer(SyncConsumer):
                 # get light and/or command that matches that payload (int from rf payload)
                 # toggle it
                 # toggle hopefully includes sending the 433 transmit to turn it on
-            elif module_type == 'esp_lora':
+            elif module_type == 'lora':
                 if dev_id == 103 and info_type == "garage-status":
                     logger.info("sub topic: {0}, payload: {1}".format(topic, payload))
                     channel_layer = get_channel_layer()
