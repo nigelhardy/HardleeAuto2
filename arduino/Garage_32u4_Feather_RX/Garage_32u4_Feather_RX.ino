@@ -13,6 +13,7 @@
  cf = close failed
  of = open failed
  tf = general unknown timeout from open or close attempt
+ uo = unexpectedly opened
 */
 
 /************ Radio Setup ***************/
@@ -130,7 +131,6 @@ void loop() {
   reedSwitchState = digitalRead(REED_SWITCH_INPUT_PIN);
   if(lastReedSwitchState != reedSwitchState)
   {
-    Serial.println("Different");
     // reset the debouncing timer
     lastDebounceTime = millis();
   }
@@ -237,13 +237,21 @@ void HandleReedSensorChange()
   }
   else if(reedGarageDoorClosed && garageStatus == GARAGE_OPEN)
   {
+    // unexpectedly closed
     garageStatus = GARAGE_CLOSED;
   }
-  else if(!reedGarageDoorClosed && garageStatus == GARAGE_CLOSED)
+  
+  
+  if(!reedGarageDoorClosed && garageStatus == GARAGE_CLOSED)
   {
+    // unexpectedly open
     garageStatus = GARAGE_OPEN;
+    strcpy(data, "uo"); // unexpectedly opened
   }
-  SetGarageStatus();
+  else
+  {
+    SetGarageStatus();
+  }
   // Send a reply back to the originator client
   if (!rf69_manager.sendtoWait(data, sizeof(data), DEST_ADDRESS))
     Serial.println("Sending new status failed (no ack)");
@@ -251,7 +259,7 @@ void HandleReedSensorChange()
 void OpenGarage()
 {
   Serial.println("Open Garage Cmd");
-
+  // the fuzzy edge cases aren't perfect, but should work fine
   if(reedGarageDoorClosed)
   {
     garageStatus = GARAGE_CLOSED_OPENING;
@@ -261,6 +269,9 @@ void OpenGarage()
   }
   else if(garageStatus == GARAGE_OPEN_CLOSING)
   {
+    clickerStartTime = millis();
+    clickerRelayActive = true;
+    pendingOpenCloseTime = millis();
     garageStatus = GARAGE_OPEN;
   }
   SetGarageStatus();
@@ -269,17 +280,13 @@ void OpenGarage()
 void CloseGarage()
 {
   Serial.println("Close Garage Cmd");
+  // the fuzzy edge cases aren't perfect, but should work fine
   if(!reedGarageDoorClosed)
   {
     garageStatus = GARAGE_OPEN_CLOSING;
     clickerStartTime = millis();
     clickerRelayActive = true;
     pendingOpenCloseTime = millis();
-
-  }
-  else if(garageStatus == GARAGE_CLOSED_OPENING)
-  {
-    garageStatus = GARAGE_CLOSED;
   }
   SetGarageStatus();
 }
