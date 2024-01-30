@@ -18,12 +18,14 @@
 #include <MQTT.h>
 #include <WiFiManager.h>
 
+#include <ArduinoJson.h>
+
 const char *ssid = std::getenv("WIFI_SSID");
 const char *password = std::getenv("WIFI_PASS");
 WiFiClient net;
 MQTTClient client;
 int device_id = 103;
-
+StaticJsonDocument<200> doc;
 unsigned long long lastCheck = 0;
 /************ Radio Setup ***************/
 
@@ -129,7 +131,7 @@ void loop() {
   if(lastCheck + LOGGING_INTERNAL_MS < millis())
   {
     lastCheck = millis();
-    client.publish("esp_lora/" + String(device_id) + "/logging", "Still Alive!");
+    client.publish("lora/" + String(device_id) + "/logging", "alive ping");
   }
 
   // recieve data from LoRa
@@ -140,15 +142,13 @@ void loop() {
     uint8_t from;
     if (rf69_manager.recvfromAck(buf, &len, &from)) {
       buf[len] = 0; // zero out remaining string
-      
       Serial.print("Got packet from #");
       Serial.print(from);
       Serial.print(" [RSSI :");
       Serial.print(rf69.lastRssi());
       Serial.print("] : ");
       Serial.println((char*)buf);
-      // TODO handle different messages and send readable payloads over MQTT
-      client.publish("esp_lora/" + String(device_id) + "/garage-status", String((char*)buf));
+      client.publish("lora/" + String(device_id) + "/garage-status", String((char*)buf));
     }
   }
 
@@ -186,8 +186,7 @@ void loop() {
         Serial.print(rf69.lastRssi());
         Serial.print("] : ");
         Serial.println((char*)buf);
-        // TODO handle different messages and send readable payloads over MQTT
-        client.publish("esp_lora/" + String(device_id) + "/garage-status", String((char*)buf));
+        client.publish("lora/" + String(device_id) + "/garage-status", String((char*)buf));
 
       } else {
         Serial.println("No reply, is anyone listening?");
@@ -201,17 +200,15 @@ void loop() {
 void connect_mqtt()
 {   
   Serial.print("\nconnecting...");
-  String client_id = "rf-433-" + String(device_id);
+  String client_id = "lora-esp32-" + String(device_id);
 
   while (!client.connect(client_id.c_str(), "nigel", "O6XNCkmwRSGqwWXav80=")) {
     Serial.print(".");
     delay(1000);
   }
   Serial.println("\nconnected!");
-  client.subscribe("esp_lora/" + String(device_id) + "/open-garage", 2);
-  client.subscribe("esp_lora/" + String(device_id) + "/close-garage", 2);
-  client.subscribe("esp_lora/" + String(device_id) + "/query-garage", 2);
-  client.publish("esp_lora/" + String(device_id) + "/loggin", "Startup");
+  client.subscribe("lora/" + String(device_id) + "/garage-cmd", 2);
+  client.publish("lora/" + String(device_id) + "/loggin", "Startup");
 
 }
 
@@ -231,21 +228,32 @@ void messageReceived(String &topic, String &payload) {
   if(pch == NULL)
     return;
 
-  if(strcmp(pch, "open-garage") == 0)
+  if(strcmp(pch, "garage-cmd") == 0)
   {
-    Serial.println("Open Garage");
-    current_command = OPEN_GARAGE;
-  }
-  if(strcmp(pch, "close-garage") == 0)
-  {
-    Serial.println("Close Garage");
-    current_command = CLOSE_GARAGE;
-  }
-  if(strcmp(pch, "query-garage") == 0)
-  {
-    Serial.println("Query");
-    current_command = QUERY_GARAGE;
+    // Deserialize the JSON document
+    DeserializationError error = deserializeJson(doc, payload);
 
+    // Test if parsing succeeds.
+    if (error) {
+      Serial.print(F("deserializeJson() failed: "));
+      Serial.println(error.f_str());
+      return;
+    }
+    if(doc["cmd"] == "query")
+    {
+      Serial.println("Query");
+      current_command = QUERY_GARAGE;
+    }
+    else if(doc["cmd"] == "open")
+    {
+      Serial.println("Open Garage");
+      current_command = OPEN_GARAGE;
+    }
+    else if(doc["cmd"] == "close")
+    {
+      Serial.println("Close Garage");
+      current_command = CLOSE_GARAGE;
+    }
   }
   Serial.println("incoming: " + topic + " - payload = " + String(payload));
 
