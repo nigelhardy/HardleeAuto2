@@ -64,33 +64,33 @@ class DevicesConsumer(WebsocketConsumer):
                     light = RGBLight.objects.get(id=int(message))
                     light.toggle()
                 elif 'open_garage_door' in text_data_json:
-                    topic = "esp_lora/103/open-garage"
+                    topic = "lora/103/garage-cmd"
                     channel_layer = get_channel_layer()
                     async_to_sync(channel_layer.send)('mqtt.pub', {  # also needs to be mqtt.pub
                         'type': 'mqtt.pub',  # necessary to be mqtt.pub
                         'text': {
                             'topic': topic,
-                            'payload': json.dumps({})
+                            'payload': json.dumps({"cmd":"open"})
                         }
                     })
                 elif 'close_garage_door' in text_data_json:
-                    topic = "esp_lora/103/close-garage"
+                    topic = "lora/103/garage-cmd"
                     channel_layer = get_channel_layer()
                     async_to_sync(channel_layer.send)('mqtt.pub', {  # also needs to be mqtt.pub
                         'type': 'mqtt.pub',  # necessary to be mqtt.pub
                         'text': {
                             'topic': topic,
-                            'payload': json.dumps({})
+                            'payload': json.dumps({"cmd":"close"})
                         }
                     })
                 elif 'query_garage_door' in text_data_json:
-                    topic = "esp_lora/103/query-garage"
+                    topic = "lora/103/garage-cmd"
                     channel_layer = get_channel_layer()
                     async_to_sync(channel_layer.send)('mqtt.pub', {  # also needs to be mqtt.pub
                         'type': 'mqtt.pub',  # necessary to be mqtt.pub
                         'text': {
                             'topic': topic,
-                            'payload': json.dumps({})
+                            'payload': json.dumps({"cmd":"query"})
                         }
                     })
             except ObjectDoesNotExist as e:

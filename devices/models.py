@@ -13,7 +13,7 @@ class RF433Module(models.Model):
     name = models.CharField(max_length=300)
     unique_id = models.IntegerField(unique=True)
     is_active = models.BooleanField(default=True)
-    rf433_topic = "rf-433"
+    rf433_topic = "rf433tx"
 
     def send_rf_outlet_command(self, rf_outlet):
         topic = self.rf433_topic + "/" + str(self.unique_id) + "/send-command"
