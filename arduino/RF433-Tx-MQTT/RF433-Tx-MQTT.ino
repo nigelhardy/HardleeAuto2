@@ -103,8 +103,8 @@ void loop() {
   if(rf_payload != -1)
   {
     mySwitch.send(rf_payload, 24);
-    rf_payload = -1;
     client.publish("rf433tx/" + String(device_id) + "/send-ack", String(rf_payload));  
+    rf_payload = -1;
     delay(10);
   }
 }

@@ -50,23 +50,13 @@ void loop() {
 
     mySwitch.resetAvailable();
 
-    client.publish("recv_433/" + String(device_id) + "/recv-rf", String(val));
+    client.publish("rf433rx/" + String(device_id) + "/recv-payload", String(val));
   }
   if(lastLog + 60000 < millis())
   {
     lastLog = millis();
     testOnOff = !testOnOff;
-    client.publish("recv_433/" + String(device_id) + "/ack", "Still Alive!");
-
-    // if(testOnOff)
-    // {
-    //   client.publish("recv_433/" + String(device_id) + "/recv-rf", String(268035));
-    // }
-    // else
-    // {
-    //   client.publish("recv_433/" + String(device_id) + "/recv-rf", String(268026));
-    // }
-
+    client.publish("rf433rx/" + String(device_id) + "/loggin", "Still Alive!");
   }
     
 }
@@ -74,14 +64,14 @@ void loop() {
 void connect_mqtt()
 {   
   Serial.print("\nconnecting...");
-  String client_id = "rf-433recv-" + String(device_id);
+  String client_id = "rf433rx-" + String(device_id);
 
   while (!client.connect(client_id.c_str(), "nigel", "O6XNCkmwRSGqwWXav80=")) {
     Serial.print(".");
     delay(1000);
   }
   Serial.println("\nconnected!");
-  client.publish("recv_433/" + String(device_id) + "/ack", "Startup");
+  client.publish("rf433rx/" + String(device_id) + "/logging", "Startup");
 }
 
 void messageReceived(String &topic, String &payload) {
