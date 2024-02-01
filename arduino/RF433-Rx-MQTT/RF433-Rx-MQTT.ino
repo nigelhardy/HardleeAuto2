@@ -37,6 +37,7 @@ void loop() {
   if (!client.connected()) {
     connect_mqtt();
   }
+  client.loop();
   if (mySwitch.available()) {
     
     Serial.print("Received ");
