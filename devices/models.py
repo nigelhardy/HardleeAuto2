@@ -16,7 +16,7 @@ class RF433Module(models.Model):
     rf433_topic = "rf433tx"
 
     def send_rf_outlet_command(self, rf_outlet):
-        topic = self.rf433_topic + "/" + str(self.unique_id) + "/send-command"
+        topic = self.rf433_topic + "/" + str(self.unique_id) + "/send-payload"
         channel_layer = get_channel_layer()
         logger.info("topic sending " + topic)
         status = {"id": rf_outlet.id, "is_on": rf_outlet.is_on,
