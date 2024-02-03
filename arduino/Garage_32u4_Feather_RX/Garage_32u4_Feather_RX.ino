@@ -52,7 +52,7 @@ bool clickerRelayActive         = false;
 int16_t packetnum               = 0;  // packet counter, we increment per xmission
 unsigned long pendingOpenCloseTime = 0;
 unsigned long lastDebounceTime  = 0;  // the last time the output pin was toggled
-unsigned long debounceDelay     = 50;    // the debounce time; increase if the output flickers
+unsigned long debounceDelay     = 500;    // the debounce time; increase if the output flickers
 
 enum GARAGE_STATUS {
   UNKNOWN = 0,
