@@ -190,9 +190,12 @@ void loop() {
 
       } else {
         Serial.println("No reply, is anyone listening?");
+        client.publish("lora/" + String(device_id) + "/garage-status", "No reply from garage LoRa.");
       }
     } else {
       Serial.println("Sending failed (no ack)");
+      client.publish("lora/" + String(device_id) + "/garage-status", "No ack from garage LoRa.");
+
     }
   }
 
