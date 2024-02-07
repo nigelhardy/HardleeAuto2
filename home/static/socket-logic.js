@@ -1,4 +1,4 @@
-    const devicesSocket = new WebSocket(
+    const devicesSocket = new ReconnectingWebSocket(
         'ws://'
         + window.location.host
         + '/ws/devices/'
@@ -34,42 +34,22 @@
         };
     }
 
-    function check_ws()
-    {
-        if (devicesSocket.readyState === WebSocket.CLOSED) {
-            show_refresh_popup();
-        }
-    }
-
-    function show_refresh_popup()
-    {
-        let isExecuted = confirm("Websocket Connection Lost: Refresh?");
-        if(isExecuted)
-        {
-            location.reload();
-        }
-    }
-
     devicesSocket.onclose = function(e) {
         console.error('Devices socket closed unexpectedly');
         var div = document.getElementById( 'main-div' );
         div.classList.remove("w3-teal");
         div.classList.add("w3-red");
-        const myTimeout = setTimeout(show_refresh_popup, 100);
     };
 
     function toggle_rf_outlet(rf_outlet_id) {
-        check_ws();
         console.log("Sending: " + rf_outlet_id);
         devicesSocket.send(JSON.stringify({'rf_outlet_toggle': rf_outlet_id}));
     }
     function toggle_rgb_light(rgb_light_id) {
-        check_ws();
         console.log("Sending: RGB Light ID = " + rgb_light_id);
         devicesSocket.send(JSON.stringify({'rgb_light_toggle': rgb_light_id}));
     }
     function update_rgb_light_color(rgb_light_id, color) {
-        check_ws();
         console.log("Sending: RGB Light Color to ID = " + rgb_light_id);
         devicesSocket.send(JSON.stringify({'rgb_light_color_update': {"id": rgb_light_id, "hexcolor": color}}));
     }
@@ -77,7 +57,6 @@
 	document.getElementById("garage-status").textContent = "Garage Status: No response from sending unit.";
     }
     function open_garage_door() {
-        check_ws();
         let isExecuted = confirm("Are you sure to open garage door?");
         if(isExecuted)
         {
@@ -88,14 +67,12 @@
         }
     }
     function close_garage_door() {
-        check_ws();
         document.getElementById("garage-status").textContent = "Garage Status: Sending Request";
 	timeoutTimer = setTimeout(no_response_from_esp, 10000);
         console.log("Sending: Close Garage Door");
         devicesSocket.send(JSON.stringify({'close_garage_door': {} }));
     }
     function query_garage_door() {
-        check_ws();
         console.log("Sending: Garage Door Query");
         document.getElementById("garage-status").textContent = "Garage Status: Sending Request";
 	timeoutTimer = setTimeout(no_response_from_esp, 10000);
