@@ -41,6 +41,13 @@
         div.classList.add("w3-red");
     };
 
+    devicesSocket.onopen = function(e) {
+        console.error('Devices socket closed unexpectedly');
+        var div = document.getElementById( 'main-div' );
+        div.classList.remove("w3-red");
+        div.classList.add("w3-teal");
+    };
+
     function toggle_rf_outlet(rf_outlet_id) {
         console.log("Sending: " + rf_outlet_id);
         devicesSocket.send(JSON.stringify({'rf_outlet_toggle': rf_outlet_id}));
