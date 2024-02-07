@@ -22,16 +22,16 @@ int device_id = 101;
 void connect_mqtt()
 {   
   Serial.print("\nconnecting...");
-  String client_id = "rf-433-" + String(device_id);
+  String client_id = "rf433tx-" + String(device_id);
 
   while (!client.connect(client_id.c_str(), "nigel", "O6XNCkmwRSGqwWXav80=")) {
     Serial.print(".");
     delay(1000);
   }
   Serial.println("\nconnected!");
-  client.subscribe("rf-433/" + String(device_id) + "/send-command", 2);
+  client.subscribe("rf433tx/" + String(device_id) + "/send-payload", 2);
 
-  client.publish("startup", client_id);
+  client.publish("rf433tx/" + String(device_id) + "/logging", "Startup");
 
 }
 
@@ -51,7 +51,7 @@ void messageReceived(String &topic, String &payload) {
   if(pch == NULL)
     return;
 
-  if(strcmp(pch, "send-command") == 0)
+  if(strcmp(pch, "send-payload") == 0)
   {
       StaticJsonDocument<200> doc;
       DeserializationError error = deserializeJson(doc, payload.c_str());
@@ -103,9 +103,8 @@ void loop() {
   if(rf_payload != -1)
   {
     mySwitch.send(rf_payload, 24);
+    client.publish("rf433tx/" + String(device_id) + "/send-ack", String(rf_payload));  
     rf_payload = -1;
-    client.publish("rf-433-" + String(device_id) + "/ack", String(rf_payload));
-
     delay(10);
   }
 }
