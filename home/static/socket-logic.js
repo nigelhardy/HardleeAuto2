@@ -3,6 +3,7 @@
         + window.location.host
         + '/ws/devices/'
     );
+    var garage_is_open = true;
     var timeoutTimer = null;
     function setup_ws()
     {
@@ -14,6 +15,12 @@
                 var outlet = data.rf_outlet_status;
                 var outlet_str = (outlet.is_on ? 'On' : 'Off');
                 document.getElementById("rf_outlet_state_" + outlet.id).textContent = outlet_str;
+            }
+            else if("bulb_status" in data)
+            {
+                var bulb = data.bulb_status;
+                var bulb_str = (bulb.is_on ? 'On' : 'Off');
+                document.getElementById("bulb_state_" + bulb.id).textContent = bulb_str;
             }
             else if("rgb_light_status" in data)
             {
@@ -28,8 +35,25 @@
             {
                 console.log("GOT GARAGE UPDATE!");
                 console.log(data);
-		clearTimeout(timeoutTimer);
+		        clearTimeout(timeoutTimer);
                 document.getElementById("garage-status").textContent = "Garage Status: " + data.mqtt_garage_update.status;
+                var open_button = document.getElementById("open_garage_button");
+                var close_button = document.getElementById("close_garage_button");
+                if(open_button && close_button)
+                {
+                    if(data.mqtt_garage_update.is_open)
+                    {
+                        open_button.style.display = "none";
+                        close_button.style.display = "initial";
+                    }
+                    else
+                    {
+                        open_button.style.display = "initial";
+                        close_button.style.display = "none";
+                    }
+                    open_button.textContent = data.mqtt_garage_update.status;
+                    close_button.textContent = data.mqtt_garage_update.status;
+                }
             }
         };
     }
@@ -51,6 +75,10 @@
     function toggle_rf_outlet(rf_outlet_id) {
         console.log("Sending: " + rf_outlet_id);
         devicesSocket.send(JSON.stringify({'rf_outlet_toggle': rf_outlet_id}));
+    }
+    function toggle_bulb(bulb_id) {
+        console.log("Sending: " + bulb_id);
+        devicesSocket.send(JSON.stringify({'bulb_toggle': bulb_id}));
     }
     function toggle_rgb_light(rgb_light_id) {
         console.log("Sending: RGB Light ID = " + rgb_light_id);
@@ -75,14 +103,14 @@
     }
     function close_garage_door() {
         document.getElementById("garage-status").textContent = "Garage Status: Sending Request";
-	timeoutTimer = setTimeout(no_response_from_esp, 10000);
+	    timeoutTimer = setTimeout(no_response_from_esp, 10000);
         console.log("Sending: Close Garage Door");
         devicesSocket.send(JSON.stringify({'close_garage_door': {} }));
     }
     function query_garage_door() {
         console.log("Sending: Garage Door Query");
         document.getElementById("garage-status").textContent = "Garage Status: Sending Request";
-	timeoutTimer = setTimeout(no_response_from_esp, 10000);
+	    timeoutTimer = setTimeout(no_response_from_esp, 10000);
         devicesSocket.send(JSON.stringify({'query_garage_door': {} }));
     }
     function send_color(unique_id)

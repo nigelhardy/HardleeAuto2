@@ -10,7 +10,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hardleeauto.settings')
 
 django.setup()
 logger = logging.getLogger(__name__)
-from devices.models import RF433Outlet, RGBLight
+from devices.models import RF433Outlet, RGBLight, ShellyBulb
 
 
 class MqttConsumer(SyncConsumer):
@@ -48,14 +48,23 @@ class MqttConsumer(SyncConsumer):
                         'message': light.get_json_state()
                     }
                 )
-            elif module_type == 'recv_433' and info_type == "recv-rf":
+            elif module_type == 'rf433rx' and info_type == "recv-payload":
                 logger.info("sub topic: {0}, payload: {1}".format(topic, payload))
                 logger.info("payload int = " + str(int(payload)))
-                isOnButton = True
+                isOnButton = False
+                bulb = ShellyBulb.objects.filter(recv_trigger=int(payload)).first()
+                if not bulb:
+                    bulb = ShellyBulb.objects.filter(recv_trigger=int(payload)+9).first()
+                    isOnButton = True
+                if bulb:
+                    logger.info("Found Bulb, on = " + str(isOnButton))
+                    bulb.set_light_on_off(isOnButton)
+
+                isOnButton = False
                 outlet = RF433Outlet.objects.filter(recv_trigger=int(payload)).first()
                 if not outlet:
                     outlet = RF433Outlet.objects.filter(recv_trigger=int(payload)+9).first()
-                    isOnButton = False
+                    isOnButton = True
                 if outlet:
                     logger.info("Found Outlet, on = " + str(isOnButton))
                     outlet.is_on = isOnButton
