@@ -33,10 +33,9 @@
             }
             else if("mqtt_garage_update" in data)
             {
-                console.log("GOT GARAGE UPDATE!");
                 console.log(data);
 		        clearTimeout(timeoutTimer);
-                document.getElementById("garage-status").textContent = "Garage Status: " + data.mqtt_garage_update.status;
+                document.getElementById("garage-status").textContent = data.mqtt_garage_update.status;
                 var open_button = document.getElementById("open_garage_button");
                 var close_button = document.getElementById("close_garage_button");
                 var open_span = document.getElementById("open_garage_span");
