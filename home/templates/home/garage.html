@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hardlee Garage</title>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+</head>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+{% load static %}
+<script src="{% static 'reconnecting-websocket.min.js' %}"></script>
+<script src="{% static 'socket-logic.js' %}"></script>
+<body onload="setup_ws()">
+<div class="w3-container w3-teal" id="main-div">
+    <h1>Hardlee Automation</h1>
+    <a href="/"><h2>Home Page</h2></a>
+    {% if garages %}
+    <div class="w3-container w3-margin-left">
+    {% for garage in garages %}
+    {% if garage.is_open %}
+        <div id="open_garage_button" style="display:none;" class="w3-container w3-margin">
+            <button style="width:100%;height:300px;"
+                class="w3-button w3-white w3-border w3-border-blue w3-padding-large w3-round-large" onclick="open_garage_door()">
+                {{ garage.name }}: <span id="open_garage_span">{{ garage.current_state }}</span></button>
+        </div>
+        <div id="close_garage_button" style="display:initial;" class="w3-container w3-margin">
+            <button style="width:100%;height:300px;dislpay:initial;"
+                class="w3-button w3-white w3-border w3-border-blue w3-padding-large w3-round-large" onclick="close_garage_door()">
+                {{ garage.name }}: <span id="close_garage_span">{{ garage.current_state }}</span></button>
+        </div>
+    {% else %}
+        <div id="open_garage_button" style="display:initial;" class="w3-container w3-margin">
+            <button style="width:100%;height:300px;"
+                class="w3-button w3-white w3-border w3-border-blue w3-padding-large w3-round-large" onclick="open_garage_door()">
+                {{ garage.name }}: <span id="open_garage_span">{{ garage.current_state }}</span></button>
+        </div>
+        <div id="close_garage_button" style="display:none;" class="w3-container w3-margin">
+            <button style="width:100%;height:300px;display:none;"
+                class="w3-button w3-white w3-border w3-border-blue w3-padding-large w3-round-large" onclick="close_garage_door()">
+                {{ garage.name }}: <span id="close_garage_span">{{ garage.current_state }}</span></button>
+        </div>
+    {% endif %}
+    {% endfor %}
+    {% else %}
+    <h2>No Garage configured.</h2>
+    {% endif %}
+    </div>
+    <div class="w3-container w3-margin">
+        <div class="w3-container w3-margin">
+            <h2 id="garage-status">Garage Status: Unknown</h2>
+            <button style="width:33%;height:100px;" class="w3-button w3-white w3-border w3-border-blue w3-padding-large w3-round-large" onclick="open_garage_door()">Open Garage Door</button>
+            <button style="width:33%;height:100px;" class="w3-button w3-white w3-border w3-border-blue w3-padding-large w3-round-large" onclick="close_garage_door()">Close Garage Door</button>
+            <button style="width:33%;height:100px;" class="w3-button w3-white w3-border w3-border-blue w3-padding-large w3-round-large" onclick="query_garage_door()">Query Garage Door</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>
