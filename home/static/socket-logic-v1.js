@@ -33,7 +33,7 @@
             }
             else if("mqtt_garage_update" in data)
             {
-                console.log(data);
+                console.log("Garage Update Received");
 		        clearTimeout(timeoutTimer);
                 document.getElementById("garage-status").textContent = data.mqtt_garage_update.status;
                 var garage_button = document.getElementById("garage_button");
