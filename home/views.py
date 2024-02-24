@@ -16,16 +16,6 @@ def index(request):
     rgb_lights = RGBLight.objects.all()
     shelly_bulbs = ShellyBulb.objects.all()
 
-    topic = "lora/103/garage-cmd"
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.send)('mqtt.pub', {  # also needs to be mqtt.pub
-        'type': 'mqtt.pub',  # necessary to be mqtt.pub
-        'text': {
-            'topic': topic,
-            'payload': json.dumps({"cmd":"query"})
-        }
-    })
-
     template = loader.get_template('home/index.html')
     context = {
         'rf_outlets': rf_outlets,
@@ -36,16 +26,6 @@ def index(request):
 
 @login_required()
 def garage(request):
-
-    topic = "lora/103/garage-cmd"
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.send)('mqtt.pub', {  # also needs to be mqtt.pub
-        'type': 'mqtt.pub',  # necessary to be mqtt.pub
-        'text': {
-            'topic': topic,
-            'payload': json.dumps({"cmd":"query"})
-        }
-    })
 
     garages = Garage.objects.all()
     template = loader.get_template('home/garage.html')

@@ -8,12 +8,23 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
 {% load static %}
 <script src="{% static 'reconnecting-websocket.min.js' %}"></script>
-<script src="{% static 'socket-logic.js' %}"></script>
+<script src="{% static 'socket-logic-v1.js' %}"></script>
 <body onload="setup_ws()">
 <div class="w3-container w3-teal" id="main-div">
     <h1>&#127960 Hardlee Automation</h1>
+    {% if garages %}
+    {% for garage in garages %}
     <a href="garage/">
-        <h2 id="garage-status">Garage Status: Unknown</h2></a>
+        <h2 id="garage-status">
+    {% if garage.is_open %}
+    {{ garage.name }}: Garage is Open</h2></a>
+    {% else %}
+    {{ garage.name }}: Garage is Closed</h2></a>
+    {% endif %}
+    {% endfor %}
+    {% else %}
+    No Garage configured.
+    {% endif %}
     <h2>RF Outlets Status</h2>
     {% if rf_outlets %}
     {% for outlet in rf_outlets %}
