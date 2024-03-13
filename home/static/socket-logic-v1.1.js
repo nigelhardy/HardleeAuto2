@@ -14,7 +14,11 @@
             {
                 var outlet = data.rf_outlet_status;
                 var outlet_str = (outlet.is_on ? 'On' : 'Off');
-                document.getElementById("rf_outlet_state_" + outlet.id).textContent = outlet_str;
+                // hacky way of just changing on and off if it is not currently up-to-date
+                var opposite_outlet_str = (!outlet.is_on ? 'On' : 'Off');
+                var currentText = document.getElementById("rf_outlet_state_" + outlet.id).textContent;
+                currentText = currentText.replace(opposite_outlet_str, outlet_str);
+                document.getElementById("rf_outlet_state_" + outlet.id).textContent = currentText;
             }
             else if("bulb_status" in data)
             {
@@ -70,9 +74,13 @@
         devicesSocket.send(JSON.stringify({'query_garage_door': {} }));
     };
 
-    function toggle_rf_outlet(rf_outlet_id) {
-        console.log("Sending: " + rf_outlet_id);
-        devicesSocket.send(JSON.stringify({'rf_outlet_toggle': rf_outlet_id}));
+    function turn_on_rf_outlet(rf_outlet_id) {
+        console.log("Sending RF Outlet On: " + rf_outlet_id);
+        devicesSocket.send(JSON.stringify({'rf_outlet_command': {'id':rf_outlet_id, 'command':'on'}}));
+    }
+    function turn_off_rf_outlet(rf_outlet_id) {
+        console.log("Sending RF Outlet Off: " + rf_outlet_id);
+        devicesSocket.send(JSON.stringify({"rf_outlet_command": {"id":rf_outlet_id, "command":"off"}}));
     }
     function toggle_bulb(bulb_id) {
         console.log("Sending: " + bulb_id);

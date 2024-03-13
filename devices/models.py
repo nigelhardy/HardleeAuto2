@@ -54,6 +54,12 @@ class RF433Outlet(models.Model):
         self.rf_433_mqtt.send_rf_outlet_command(self)
         self.save()
 
+    def set_on_off(self, isOnCommand):
+        logger.info(self.is_on)
+        self.is_on = isOnCommand
+        self.rf_433_mqtt.send_rf_outlet_command(self)
+        self.save()
+
     def get_state_dict(self):
         return {"id": self.id, "is_on": self.is_on}
 

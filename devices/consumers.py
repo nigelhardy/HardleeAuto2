@@ -48,10 +48,15 @@ class DevicesConsumer(WebsocketConsumer):
                     light.blue = int(hexcolor[5:7],16)
                     light.set_color_mqtt()
 
-                if 'rf_outlet_toggle' in text_data_json:
-                    message = text_data_json['rf_outlet_toggle']
-                    outlet = RF433Outlet.objects.get(id=int(message))
-                    outlet.toggle()
+                if 'rf_outlet_command' in text_data_json:
+                    message = text_data_json['rf_outlet_command']
+                    logger.info(message)
+                    outlet = RF433Outlet.objects.get(id=int(message['id']))
+                    if 'command' in message:
+                        if message['command'] == "on":
+                            outlet.set_on_off(True)
+                        elif message['command'] == "off":
+                            outlet.set_on_off(False)
                     channel_layer = get_channel_layer()
                     async_to_sync(channel_layer.group_send)(
                         'device_updates', {
