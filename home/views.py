@@ -15,12 +15,14 @@ def index(request):
     rf_outlets = RF433Outlet.objects.all()
     rgb_lights = RGBLight.objects.all()
     shelly_bulbs = ShellyBulb.objects.all()
+    garages = Garage.objects.all()
 
     template = loader.get_template('home/index.html')
     context = {
         'rf_outlets': rf_outlets,
         'rgb_lights': rgb_lights,
-        'shelly_bulbs': shelly_bulbs
+        'shelly_bulbs': shelly_bulbs,
+        'garages': garages
     }
     return HttpResponse(template.render(context, request))
 
