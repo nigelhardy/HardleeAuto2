@@ -45,16 +45,19 @@ class RF_OnOffPair(models.Model):
 
 class RF433Outlet(models.Model):
     name = models.CharField(max_length=300)
-    on_payload = models.IntegerField(default=-1)
+    send_rf_pair = models.ForeignKey(RF_OnOffPair, on_delete=models.CASCADE, related_name="hardlee_rf_pairs", blank=True, null=True)
     recv_triggers = models.ManyToManyField(RF_OnOffPair)
     is_on = models.BooleanField(default=False)
     rf_433_mqtt = models.ForeignKey(RF433Module, on_delete=models.CASCADE)
 
     def get_payload(self):
-        if self.is_on:
-            return self.on_payload
+        if self.send_rf_pair:
+            if self.is_on:
+                return self.send_rf_pair.onValue
+            else:
+                return self.send_rf_pair.offValue
         else:
-            return self.on_payload + 9
+            logger.warning("No RF Send Value Set")
 
     def toggle(self):
         self.is_on = not self.is_on
@@ -94,12 +97,6 @@ class ShellyBulb(models.Model):
     shelly_id = models.CharField(max_length=100)
     recv_triggers = models.ManyToManyField(RF_OnOffPair)
     is_on = models.BooleanField(default=False)
-
-    def get_payload(self):
-        if self.is_on:
-            return self.on_payload
-        else:
-            return self.on_payload + 9
 
     def toggle(self):
         logger.info(self.is_on)
