@@ -49,6 +49,7 @@ class RF433Outlet(models.Model):
     recv_triggers = models.ManyToManyField(RF_OnOffPair)
     is_on = models.BooleanField(default=False)
     rf_433_mqtt = models.ForeignKey(RF433Module, on_delete=models.CASCADE)
+    order = models.IntegerField(default=12345)
 
     def get_payload(self):
         if self.send_rf_pair:
@@ -70,9 +71,10 @@ class RF433Outlet(models.Model):
                     })
         self.save()
 
-    def set_on_off(self, isOnCommand):
+    def set_on_off(self, isOnCommand, send433=True):
         self.is_on = isOnCommand
-        self.rf_433_mqtt.send_rf_outlet_command(self)
+        if send433:
+            self.rf_433_mqtt.send_rf_outlet_command(self)
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
                 'device_updates', {

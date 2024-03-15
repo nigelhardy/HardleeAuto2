@@ -25,6 +25,20 @@
     {% else %}
     No Garage configured.
     {% endif %}
+    <h2>MQTT Lights Status</h2>
+    {% if shelly_bulbs %}
+    {% for bulb in shelly_bulbs %}
+    <div class="w3-container w3-margin-left">
+        <div class="w3-container w3-margin">
+            <button style="width:100%;height:100px;" class="w3-button w3-white w3-border w3-border-blue w3-padding-large w3-round-large" onclick="toggle_bulb({{bulb.id}})">
+                {{ bulb.name }}: <span id="bulb_state_{{bulb.id}}"> {% if bulb.is_on %} On {% else %} Off {% endif %}</span></button>
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <h2>No Bulbs configured.</h2>
+    {% endif %}
+
     <h2>RF Outlets Status</h2>
     {% if rf_outlets %}
     {% for outlet in rf_outlets %}
@@ -41,21 +55,8 @@
     {% else %}
     <h2>No RF Outlets configured.</h2>
     {% endif %}
-    <h2>MQTT Lights Status</h2>
-    {% if shelly_bulbs %}
-    {% for bulb in shelly_bulbs %}
-    <div class="w3-container w3-margin-left">
-        <div class="w3-container w3-margin">
-            <button style="width:100%;height:100px;" class="w3-button w3-white w3-border w3-border-blue w3-padding-large w3-round-large" onclick="toggle_bulb({{bulb.id}})">
-                {{ bulb.name }}: <span id="bulb_state_{{bulb.id}}"> {% if bulb.is_on %} On {% else %} Off {% endif %}</span></button>
-        </div>
-    </div>
-    {% endfor %}
-    {% else %}
-    <h2>No Bulbs configured.</h2>
-    {% endif %}
-    <h2>RGB Lights Status</h2>
 
+    <h2>RGB Lights Status</h2>
     {% if rgb_lights %}
     {% for light in rgb_lights %}
     <div class="w3-container w3-margin-left">
