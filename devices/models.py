@@ -34,11 +34,19 @@ class RF433Module(models.Model):
     def __str__(self):
         return self.name
 
+class RF_OnOffPair(models.Model):
+    name = models.CharField(max_length=300)
+    onValue = models.IntegerField(default=-1)
+    offValue = models.IntegerField(default=-1)
+
+    def __str__(self):
+        return self.name
+
 
 class RF433Outlet(models.Model):
     name = models.CharField(max_length=300)
     on_payload = models.IntegerField(default=-1)
-    recv_trigger = models.IntegerField(default=-1)
+    recv_triggers = models.ManyToManyField(RF_OnOffPair)
     is_on = models.BooleanField(default=False)
     rf_433_mqtt = models.ForeignKey(RF433Module, on_delete=models.CASCADE)
 
@@ -49,15 +57,25 @@ class RF433Outlet(models.Model):
             return self.on_payload + 9
 
     def toggle(self):
-        logger.info(self.is_on)
         self.is_on = not self.is_on
         self.rf_433_mqtt.send_rf_outlet_command(self)
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+                'device_updates', {
+                    'type': 'mqtt_rgb_light_update',
+                    'message': self.get_json_state()
+                    })
         self.save()
 
     def set_on_off(self, isOnCommand):
-        logger.info(self.is_on)
         self.is_on = isOnCommand
         self.rf_433_mqtt.send_rf_outlet_command(self)
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+                'device_updates', {
+                    'type': 'mqtt_rgb_light_update',
+                    'message': self.get_json_state()
+                    })
         self.save()
 
     def get_state_dict(self):
@@ -74,7 +92,7 @@ class RF433Outlet(models.Model):
 class ShellyBulb(models.Model):
     name = models.CharField(max_length=300)
     shelly_id = models.CharField(max_length=100)
-    recv_trigger = models.IntegerField(default=-1)
+    recv_triggers = models.ManyToManyField(RF_OnOffPair)
     is_on = models.BooleanField(default=False)
 
     def get_payload(self):
@@ -88,11 +106,23 @@ class ShellyBulb(models.Model):
         self.is_on = not self.is_on
         self.send_mqtt()
         self.save()
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+                'device_updates', {
+                    'type': 'mqtt_rgb_light_update',
+                    'message': self.get_json_state()
+                    })
 
     def set_light_on_off(self, isOn):
         self.is_on = isOn
         self.send_mqtt()
         self.save()
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+                'device_updates', {
+                    'type': 'mqtt_rgb_light_update',
+                    'message': self.get_json_state()
+                    })
 
     def send_mqtt(self):
         topic = self.shelly_id + "command"
