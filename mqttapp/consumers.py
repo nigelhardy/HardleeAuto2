@@ -10,7 +10,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'hardleeauto.settings')
 
 django.setup()
 logger = logging.getLogger(__name__)
-from devices.models import RF433Outlet, RGBLight, ShellyBulb
+from devices.models import RF433Outlet, RGBLight, ShellyBulb, RF_OnOffPair
 
 
 class MqttConsumer(SyncConsumer):
@@ -52,35 +52,30 @@ class MqttConsumer(SyncConsumer):
                 logger.info("sub topic: {0}, payload: {1}".format(topic, payload))
                 logger.info("payload int = " + str(int(payload)))
                 isOnButton = False
-                bulb = ShellyBulb.objects.filter(recv_trigger=int(payload)).first()
-                if not bulb:
-                    bulb = ShellyBulb.objects.filter(recv_trigger=int(payload)+9).first()
-                    isOnButton = True
-                if bulb:
-                    logger.info("Found Bulb, on = " + str(isOnButton))
-                    bulb.set_light_on_off(isOnButton)
+                rfPairsOn = RF_OnOffPair.objects.filter(onValue=int(payload))
+                rfPairsOff = RF_OnOffPair.objects.filter(offValue=int(payload))
+                for rfPairOn in rfPairsOn:
+                    bulb = None
+                    if rfPairOn:
+                        logger.info("Got rf pair on: " + str(rfPairOn))
+                        outlets = RF433Outlet.objects.filter(recv_triggers=rfPairOn)
+                        bulbs = ShellyBulb.objects.filter(recv_triggers=rfPairOn)
+                        isOnButton = True
+                        for bulb in bulbs:
+                            bulb.set_light_on_off(isOnButton)
+                        for outlet in outlets:
+                            outlet.set_on_off(isOnButton)
+                for rfPairOff in rfPairsOff:
+                    if rfPairOff:
+                        logger.info("Got rf pair off: " + str(rfPairOff))
+                        outlets = RF433Outlet.objects.filter(recv_triggers=rfPairOff)
+                        bulbs = ShellyBulb.objects.filter(recv_triggers=rfPairOff)
+                        isOnButton = False
+                        for bulb in bulbs:
+                            bulb.set_light_on_off(isOnButton)
+                        for outlet in outlets:
+                            outlet.set_on_off(isOnButton)
 
-                isOnButton = False
-                outlet = RF433Outlet.objects.filter(recv_trigger=int(payload)).first()
-                if not outlet:
-                    outlet = RF433Outlet.objects.filter(recv_trigger=int(payload)+9).first()
-                    isOnButton = True
-                if outlet:
-                    logger.info("Found Outlet, on = " + str(isOnButton))
-                    outlet.is_on = isOnButton
-                    outlet.rf_433_mqtt.send_rf_outlet_command(outlet)
-                    outlet.save()
-                    channel_layer = get_channel_layer()
-                    async_to_sync(channel_layer.group_send)(
-                        'device_updates',
-                        {
-                            'type': 'mqtt_rgb_light_update',
-                            'message': outlet.get_json_state()
-                        }
-                    )
-                # get light and/or command that matches that payload (int from rf payload)
-                # toggle it
-                # toggle hopefully includes sending the 433 transmit to turn it on
             elif module_type == 'lora':
                 if dev_id == 103 and info_type == "garage-status":
                     logger.info("sub topic: {0}, payload: {1}".format(topic, payload))
