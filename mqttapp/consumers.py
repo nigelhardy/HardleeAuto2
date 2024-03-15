@@ -57,24 +57,22 @@ class MqttConsumer(SyncConsumer):
                 for rfPairOn in rfPairsOn:
                     bulb = None
                     if rfPairOn:
-                        logger.info("Got rf pair on: " + str(rfPairOn))
                         outlets = RF433Outlet.objects.filter(recv_triggers=rfPairOn)
                         bulbs = ShellyBulb.objects.filter(recv_triggers=rfPairOn)
                         isOnButton = True
                         for bulb in bulbs:
                             bulb.set_light_on_off(isOnButton)
                         for outlet in outlets:
-                            outlet.set_on_off(isOnButton)
+                            outlet.set_on_off(isOnButton,False)
                 for rfPairOff in rfPairsOff:
                     if rfPairOff:
-                        logger.info("Got rf pair off: " + str(rfPairOff))
                         outlets = RF433Outlet.objects.filter(recv_triggers=rfPairOff)
                         bulbs = ShellyBulb.objects.filter(recv_triggers=rfPairOff)
                         isOnButton = False
                         for bulb in bulbs:
                             bulb.set_light_on_off(isOnButton)
                         for outlet in outlets:
-                            outlet.set_on_off(isOnButton)
+                            outlet.set_on_off(isOnButton,False)
 
             elif module_type == 'lora':
                 if dev_id == 103 and info_type == "garage-status":

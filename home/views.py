@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 @login_required()
 def index(request):
 
-    rf_outlets = RF433Outlet.objects.all()
+    rf_outlets = RF433Outlet.objects.all().order_by('order')
     rgb_lights = RGBLight.objects.all()
     shelly_bulbs = ShellyBulb.objects.all()
     garages = Garage.objects.all()
