@@ -34,24 +34,53 @@ class RF433Module(models.Model):
     def __str__(self):
         return self.name
 
+class RF_OnOffPair(models.Model):
+    name = models.CharField(max_length=300)
+    onValue = models.IntegerField(default=-1)
+    offValue = models.IntegerField(default=-1)
+
+    def __str__(self):
+        return self.name
+
 
 class RF433Outlet(models.Model):
     name = models.CharField(max_length=300)
-    on_payload = models.IntegerField(default=-1)
-    recv_trigger = models.IntegerField(default=-1)
+    send_rf_pair = models.ForeignKey(RF_OnOffPair, on_delete=models.CASCADE, related_name="hardlee_rf_pairs", blank=True, null=True)
+    recv_triggers = models.ManyToManyField(RF_OnOffPair)
     is_on = models.BooleanField(default=False)
     rf_433_mqtt = models.ForeignKey(RF433Module, on_delete=models.CASCADE)
+    order = models.IntegerField(default=12345)
 
     def get_payload(self):
-        if self.is_on:
-            return self.on_payload
+        if self.send_rf_pair:
+            if self.is_on:
+                return self.send_rf_pair.onValue
+            else:
+                return self.send_rf_pair.offValue
         else:
-            return self.on_payload + 9
+            logger.warning("No RF Send Value Set")
 
     def toggle(self):
-        logger.info(self.is_on)
         self.is_on = not self.is_on
         self.rf_433_mqtt.send_rf_outlet_command(self)
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+                'device_updates', {
+                    'type': 'mqtt_rgb_light_update',
+                    'message': self.get_json_state()
+                    })
+        self.save()
+
+    def set_on_off(self, isOnCommand, send433=True):
+        self.is_on = isOnCommand
+        if send433:
+            self.rf_433_mqtt.send_rf_outlet_command(self)
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+                'device_updates', {
+                    'type': 'mqtt_rgb_light_update',
+                    'message': self.get_json_state()
+                    })
         self.save()
 
     def get_state_dict(self):
@@ -65,6 +94,59 @@ class RF433Outlet(models.Model):
     def __str__(self):
         return self.name
 
+class ShellyBulb(models.Model):
+    name = models.CharField(max_length=300)
+    shelly_id = models.CharField(max_length=100)
+    recv_triggers = models.ManyToManyField(RF_OnOffPair)
+    is_on = models.BooleanField(default=False)
+
+    def toggle(self):
+        logger.info(self.is_on)
+        self.is_on = not self.is_on
+        self.send_mqtt()
+        self.save()
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+                'device_updates', {
+                    'type': 'mqtt_rgb_light_update',
+                    'message': self.get_json_state()
+                    })
+
+    def set_light_on_off(self, isOn):
+        self.is_on = isOn
+        self.send_mqtt()
+        self.save()
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+                'device_updates', {
+                    'type': 'mqtt_rgb_light_update',
+                    'message': self.get_json_state()
+                    })
+
+    def send_mqtt(self):
+        topic = self.shelly_id + "command"
+        status = "off"
+        if self.is_on:
+            status = "on"
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.send)('mqtt.pub', {  # also needs to be mqtt.pub
+            'type': 'mqtt.pub',  # necessary to be mqtt.pub
+            'text': {
+                'topic': topic,
+                'payload': status
+            }
+        })
+
+    def get_state_dict(self):
+        return {"id": self.id, "is_on": self.is_on}
+
+    def get_json_state(self):
+        return json.dumps({
+            'bulb_status': self.get_state_dict()
+        })
+
+    def __str__(self):
+        return self.name
 
 class RGBLight(models.Model):
     name = models.CharField(max_length=300)
@@ -84,6 +166,7 @@ class RGBLight(models.Model):
         self.is_on = not self.is_on
         logger.info(self.is_on)
         self.set_color_mqtt()
+
     def get_state_dict(self):
         return {"id": self.id, "red": self.red, "green": self.green, "blue": self.blue, "is_on": self.is_on,
                 "is_active": self.is_active, "unique_id": self.unique_id}
@@ -95,12 +178,12 @@ class RGBLight(models.Model):
 
     def set_color_mqtt(self):
         topic = self.rgb_topic + "/" + str(self.unique_id) + "/set-color"
-        channel_layer = get_channel_layer()
         logger.info("topic sending " + topic)
         logger.info(self.is_on)
         status = {"id": self.id, "red": self.red, "green": self.green, "blue": self.blue, "is_on": self.is_on,
                   "is_active": self.is_active}
         logger.info(status)
+        channel_layer = get_channel_layer()
         async_to_sync(channel_layer.send)('mqtt.pub', {  # also needs to be mqtt.pub
             'type': 'mqtt.pub',  # necessary to be mqtt.pub
             'text': {
@@ -115,3 +198,20 @@ class RGBLight(models.Model):
 
     def __str__(self):
         return self.name
+
+class Garage(models.Model):
+    name = models.CharField(max_length=300)
+    is_open = models.BooleanField(default=True)
+    current_state = models.CharField(max_length=100, default="oo")
+
+    def get_state_dict(self):
+        return { "name": self.name, "is_open": self.is_open, "current_state": self.current_state }
+
+    def get_json_state(self):
+        return json.dumps({
+            'garage_status': self.get_state_dict()
+        })
+
+    def __str__(self):
+        return self.name
+
