@@ -99,6 +99,7 @@ class ShellyBulb(models.Model):
     shelly_id = models.CharField(max_length=100)
     recv_triggers = models.ManyToManyField(RF_OnOffPair)
     is_on = models.BooleanField(default=False)
+    url = models.CharField(max_length=100)
 
     def toggle(self):
         logger.info(self.is_on)

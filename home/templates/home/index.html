@@ -34,6 +34,7 @@
                 {{ bulb.name }}: <span id="bulb_state_{{bulb.id}}"> {% if bulb.is_on %} On {% else %} Off {% endif %}</span></button>
         </div>
     </div>
+    <a href="{{bulb.url}}">Bulb Web Access (all settings)</a>
     {% endfor %}
     {% else %}
     <h2>No Bulbs configured.</h2>
