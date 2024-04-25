@@ -5,6 +5,7 @@ from django.urls import include, path
 
 urlpatterns = [
     path('', views.index, name='index'),
+    path('wol', views.wol, name='wol'),
     path('garage/', views.garage, name='garage'),
     path('accounts/', include('django.contrib.auth.urls')),
 ]

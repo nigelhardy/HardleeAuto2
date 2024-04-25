@@ -126,7 +126,14 @@ class ShellyBulb(models.Model):
 
     def send_mqtt(self):
         topic = self.shelly_id + "command"
+        # leaving this here, used to set brightness and white
+        # topic = self.shelly_id + "set"
+        # status = "{\"white\": 0\}"
+        # status = "{\"white\": 100\}"
+        # status = "{\"brightness\": 0\}"
+        # status = "{\"brightness\": 100\}"
         status = "off"
+        # leaving this here, used to set
         if self.is_on:
             status = "on"
         channel_layer = get_channel_layer()

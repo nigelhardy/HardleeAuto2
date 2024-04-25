@@ -6,6 +6,7 @@ from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 import logging
 import json
+from django.shortcuts import redirect
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,22 @@ def index(request):
         'garages': garages
     }
     return HttpResponse(template.render(context, request))
+
+@login_required()
+def wol(request):
+    logger.info("WOL")
+    # send mqtt
+    channel_layer = get_channel_layer()
+    topic = "esp_wol/105/pwr-btn"
+    payload = "1000"
+    async_to_sync(channel_layer.send)('mqtt.pub', {  # also needs to be mqtt.pub
+        'type': 'mqtt.pub',  # necessary to be mqtt.pub
+        'text': {
+            'topic': topic,
+            'payload': payload
+            }
+        })
+    return redirect(index)
 
 @login_required()
 def garage(request):
