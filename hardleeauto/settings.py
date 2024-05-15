@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_q',
 ]
 
 MIDDLEWARE = [
@@ -97,6 +98,19 @@ CHANNEL_LAYERS = {
             "hosts": [('127.0.0.1', 6379)],
         },
     },
+}
+
+Q_CLUSTER = {
+    'name': 'DjangoQ',
+    'workers': 1,
+    'recycle': 500,
+    'timeout': 300,
+    'compress': True,
+    'save_limit': 250,
+    'queue_limit': 50,
+    'cpu_affinity': 1,
+    'label': 'Django Q',
+    'orm': 'default',  # Using the default Django ORM for persistence
 }
 
 # Database

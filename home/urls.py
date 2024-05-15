@@ -8,4 +8,5 @@ urlpatterns = [
     path('wol', views.wol, name='wol'),
     path('garage/', views.garage, name='garage'),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('dyson-timer/', views.set_dyson_timer, name='set_dyson_timer'),
 ]

@@ -7,6 +7,10 @@ from asgiref.sync import async_to_sync
 import logging
 import json
 from django.shortcuts import redirect
+from django_q.tasks import schedule
+from django.utils import timezone
+from datetime import timedelta
+from .tasks import send_mqtt_message
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +45,17 @@ def wol(request):
             'payload': payload
             }
         })
+    return redirect(index)
+
+@login_required()
+def set_dyson_timer(request):
+    rf_outlets_dyson = RF433Outlet.objects.filter(name__icontains='dyson')
+    for rf_outlet in rf_outlets_dyson:
+        rf_outlet.set_on_off(True)
+    schedule(
+        'home.tasks.send_mqtt_message',
+        next_run=timezone.now() + timedelta(hours=4)
+    )
     return redirect(index)
 
 @login_required()
