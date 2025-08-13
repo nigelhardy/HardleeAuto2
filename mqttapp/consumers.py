@@ -63,7 +63,10 @@ class MqttConsumer(SyncConsumer):
                         for bulb in bulbs:
                             bulb.set_light_on_off(isOnButton)
                         for outlet in outlets:
-                            outlet.set_on_off(isOnButton,False)
+                            send_rf = False
+                            if outlet.name == "AutomateViaMax":
+                                send_rf = True
+                            outlet.set_on_off(isOnButton,send_rf)
                 for rfPairOff in rfPairsOff:
                     if rfPairOff:
                         outlets = RF433Outlet.objects.filter(recv_triggers=rfPairOff)
@@ -72,7 +75,10 @@ class MqttConsumer(SyncConsumer):
                         for bulb in bulbs:
                             bulb.set_light_on_off(isOnButton)
                         for outlet in outlets:
-                            outlet.set_on_off(isOnButton,False)
+                            send_rf = False
+                            if outlet.name == "AutomateViaMax":
+                                send_rf = True
+                            outlet.set_on_off(isOnButton,send_rf)
 
             elif module_type == 'lora':
                 if dev_id == 103 and info_type == "garage-status":
