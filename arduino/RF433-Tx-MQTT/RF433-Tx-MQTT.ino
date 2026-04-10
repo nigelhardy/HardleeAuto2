@@ -2,15 +2,21 @@
   Based on the SendDemo example from the RC Switch library
   https://github.com/sui77/rc-switch/
 */
+
+/* Built for ESP-12E from ESP8266 board NodeMCU 1.0 */
+
+/* lwmqtt library in arduino ide */
 #include <MQTT.h>
+/* tzapu library in arduino ide */
 #include <WiFiManager.h>
+#include "credentials.h"
 #include <ArduinoJson.h>
 
 const char *ssid = std::getenv("WIFI_SSID");
 const char *password = std::getenv("WIFI_PASS");
 WiFiClient net;
 MQTTClient client;
-
+/* https://github.com/sui77/rc-switch */
 #include <RCSwitch.h>
 
 RCSwitch mySwitch = RCSwitch();
@@ -24,7 +30,7 @@ void connect_mqtt()
   Serial.print("\nconnecting...");
   String client_id = "rf433tx-" + String(device_id);
 
-  while (!client.connect(client_id.c_str(), "YOUR_USERNAME", "YOUR_PASSWORD=")) {
+  while (!client.connect(client_id.c_str(), MQTT_USERNAME, MQTT_PASSWORD)) {
     Serial.print(".");
     delay(1000);
   }
