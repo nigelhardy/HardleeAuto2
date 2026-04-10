@@ -16,6 +16,7 @@
 #include <RHReliableDatagram.h>
 
 #include <MQTT.h>
+#include "credentials.h"
 #include <WiFiManager.h>
 
 #include <ArduinoJson.h>
@@ -102,10 +103,7 @@ void setup()
   rf69.setTxPower(20, true);  // range from 14-20 for power, 2nd arg must be true for 69HCW
 
   // The encryption key has to be the same as the one in the server
-  uint8_t key[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-                    0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10};
-
-  rf69.setEncryptionKey(key);
+  rf69.setEncryptionKey(LORA_ENCRYPTION_KEY);
   
   pinMode(LED, OUTPUT);
 
@@ -205,7 +203,7 @@ void connect_mqtt()
   Serial.print("\nconnecting...");
   String client_id = "lora-esp32-" + String(device_id);
 
-  while (!client.connect(client_id.c_str(), "YOUR_USERNAME", "YOUR_PASSWORD=")) {
+  while (!client.connect(client_id.c_str(), MQTT_USERNAME, MQTT_PASSWORD)) {
     Serial.print(".");
     delay(1000);
   }

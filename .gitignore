@@ -1,1 +1,3 @@
-__pycache__/
+arduino/*/credentials.h
+arduino/*/*/credentials.h
+.env

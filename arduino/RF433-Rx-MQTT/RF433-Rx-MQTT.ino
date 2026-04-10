@@ -6,6 +6,7 @@
 
 #include <RCSwitch.h>
 #include <MQTT.h>
+#include "credentials.h"
 #include <WiFiManager.h>
 
 
@@ -67,7 +68,7 @@ void connect_mqtt()
   Serial.print("\nconnecting...");
   String client_id = "rf433rx-" + String(device_id);
 
-  while (!client.connect(client_id.c_str(), "YOUR_USERNAME", "YOUR_PASSWORD=")) {
+  while (!client.connect(client_id.c_str(), MQTT_USERNAME, MQTT_PASSWORD)) {
     Serial.print(".");
     delay(1000);
   }
